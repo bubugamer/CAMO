@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CAMO Demo Pages</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/demo-assets/demo.css" />
+  </head>
+  <body class="demo-hub" data-api-prefix="__CAMO_API_PREFIX__" data-query="__CAMO_QUERY__">
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand-mark" href="/demo">CAMO Demo</a>
+        <nav class="topnav">
+          <a href="/demo/portrait">Portrait Inspector</a>
+          <a href="/demo/chat">Character Chat</a>
+        </nav>
+      </header>
+
+      <section class="hero hero-hub">
+        <div class="hero-copy">
+          <p class="eyebrow">Two focused demo surfaces</p>
+          <h1>Inspect the model output on one page. Talk to the character on another.</h1>
+          <p class="hero-text">
+            The split keeps the review workflow clean: one surface for portrait, memories,
+            events, and raw JSON; one surface for conversation testing.
+          </p>
+        </div>
+      </section>
+
+      <section class="hub-grid">
+        <a id="portrait-link" class="panel hub-card" href="/demo/portrait">
+          <p class="eyebrow">Inspector</p>
+          <h2>Portrait, memories, events, and raw JSON</h2>
+          <p class="summary-copy">
+            Review the generated output, inspect the stored structure, and regenerate a
+            portrait if needed.
+          </p>
+          <span class="inline-link">Open inspector</span>
+        </a>
+
+        <a id="chat-link" class="panel hub-card" href="/demo/chat">
+          <p class="eyebrow">Chat</p>
+          <h2>Simple dialogue test frame</h2>
+          <p class="summary-copy">
+            Load an existing character and test how the current portrait and memories affect
+            live replies.
+          </p>
+          <span class="inline-link">Open chat</span>
+        </a>
+      </section>
+    </div>
+
+    <script src="/demo-assets/demo-common.js" defer></script>
+    <script src="/demo-assets/demo-hub.js" defer></script>
+  </body>
+</html>

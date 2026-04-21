@@ -1,2 +1,16 @@
 .DS_Store
 .claude/
+.env
+.env.*
+!.env.example
+.idea/
+.pytest_cache/
+.venv/
+.vscode/
+__pycache__/
+*.pyc
+config/*.local.yaml
+config/local/
+data/raw_texts/
+data/exports/
+docker-compose.override.yml

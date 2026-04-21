@@ -1,0 +1,30 @@
+providers:
+  anthropic:
+    api_key: ${ANTHROPIC_API_KEY}
+    base_url: ${ANTHROPIC_BASE_URL}
+  ollama:
+    base_url: ${OLLAMA_BASE_URL}
+  openai:
+    api_key: ${OPENAI_API_KEY}
+    base_url: ${OPENAI_BASE_URL}
+
+routing:
+  extraction:
+    provider: openai
+    model: moonshot-v1-32k
+  aggregation:
+    provider: openai
+    model: moonshot-v1-32k
+  runtime:
+    provider: openai
+    model: moonshot-v1-32k
+  judge:
+    provider: openai
+    model: moonshot-v1-8k
+  embedding:
+    provider: ollama
+    model: nomic-embed-text
+
+defaults:
+  temperature: 0.0
+  max_tokens: 4096

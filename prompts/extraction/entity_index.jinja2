@@ -1,0 +1,42 @@
+你是严格遵守 Schema 的人物实体识别器。
+
+任务：
+从下面这个文本片段中识别所有明确出现的人物或具名角色，并输出 **严格符合 CAMO PRD v0.2 / TDD v0.1 的 Entity Index JSON**。
+
+硬性要求：
+- 只提取真实出现于片段中的人物，不要猜测未出现的人物。
+- 输出顶层必须带 `schema_version: "0.2"`。
+- 每个角色对象只能包含这些字段：
+  - `character_type`
+  - `name`
+  - `description`
+  - `aliases`
+  - `titles`
+  - `identities`
+  - `source_segments`
+- 不要输出 `character_id`、`first_appearance`、`confidence` 这类系统聚合字段，它们由代码层生成。
+- `source_segments` 只能填写当前片段 ID：`["{{ segment_id }}"]`。
+- `identities` 是规范化身份标签数组，每项必须是 `{ "type": "...", "value": "..." }`。
+- 若证据不足，`identities`、`aliases`、`titles` 可以为空数组，`description` 可以为空字符串。
+- `character_type` 只能从以下枚举中选择：
+  - `fictional_person`
+  - `real_person`
+  - `group_persona`
+  - `virtual_persona`
+  - `unnamed_person`
+  - `unidentified_person`
+- 当前文本类型是 `{{ source_type }}`：
+  - 若是小说，优先使用 `fictional_person`
+  - 若是聊天记录，优先使用 `real_person`
+- 如果没有识别到人物，返回：
+  `{"schema_version":"0.2","characters":[]}`
+- 不要输出 JSON 之外的任何解释，不要输出 Markdown，不要输出代码块。
+
+当前片段信息：
+- source_type: {{ source_type }}
+- segment_id: {{ segment_id }}
+{% if chapter %}- chapter: {{ chapter }}{% endif %}
+{% if round_num %}- round: {{ round_num }}{% endif %}
+
+文本片段：
+{{ content }}

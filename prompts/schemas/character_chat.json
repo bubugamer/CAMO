@@ -1,0 +1,86 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "response",
+    "reasoning_summary",
+    "triggered_memories",
+    "applied_rules",
+    "consistency_check"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string"
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["speaker", "content", "style_tags"],
+      "properties": {
+        "speaker": { "type": "string" },
+        "content": { "type": "string" },
+        "style_tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "reasoning_summary": {
+      "type": "string"
+    },
+    "triggered_memories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["memory_id", "reason"],
+        "properties": {
+          "memory_id": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "applied_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["namespace", "tag"],
+        "properties": {
+          "namespace": { "type": "string" },
+          "tag": { "type": "string" }
+        }
+      }
+    },
+    "consistency_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "issues"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dimension", "severity", "description", "suggestion"],
+            "properties": {
+              "dimension": { "type": "string" },
+              "severity": {
+                "type": "string",
+                "enum": ["low", "medium", "high"]
+              },
+              "description": { "type": "string" },
+              "evidence_rule_id": { "type": "string" },
+              "suggestion": { "type": "string" }
+            }
+          }
+        },
+        "action": {
+          "type": "string",
+          "enum": ["accept", "warn", "regenerate", "block"]
+        }
+      }
+    }
+  }
+}

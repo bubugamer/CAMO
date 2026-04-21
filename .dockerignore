@@ -1,0 +1,11 @@
+.claude
+.env
+.git
+.pytest_cache
+.venv
+__pycache__
+*.pyc
+books
+data
+design-system
+tests
