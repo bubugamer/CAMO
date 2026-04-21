@@ -94,7 +94,7 @@ class TextSegmentResponse(BaseModel):
     created_at: datetime
 
 
-class EntityIndexRunRequest(BaseModel):
+class CharacterIndexRunRequest(BaseModel):
     segment_limit: int | None = None
 
 
@@ -117,11 +117,11 @@ class CharacterIndexResponse(BaseModel):
 
 
 class CharacterDetailResponse(CharacterIndexResponse):
-    core: dict[str, Any] | None = None
-    facet: dict[str, Any] | None = None
+    character_core: dict[str, Any] | None = None
+    character_facet: dict[str, Any] | None = None
 
 
-class EntityIndexRunResponse(BaseModel):
+class CharacterIndexRunResponse(BaseModel):
     project_id: str
     source_id: str
     processed_segments: int
@@ -172,8 +172,8 @@ class CharacterPortraitResponse(BaseModel):
     aliases: list[str]
     processed_segments: int
     matched_segment_ids: list[str]
-    core: dict[str, Any]
-    facet: dict[str, Any]
+    character_core: dict[str, Any]
+    character_facet: dict[str, Any]
     events: list[EventRecordResponse]
     memories: list[MemoryRecordResponse]
 

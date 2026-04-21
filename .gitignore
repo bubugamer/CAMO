@@ -14,3 +14,4 @@ config/local/
 data/raw_texts/
 data/exports/
 docker-compose.override.yml
+docs/

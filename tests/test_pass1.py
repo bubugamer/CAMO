@@ -30,7 +30,7 @@ def test_aggregate_mentions_merges_alias_overlap() -> None:
     aggregated = _aggregate_mentions(mentions=mentions, total_segments=2)
 
     assert len(aggregated) == 1
-    payload = aggregated[0]["index_payload"]
+    payload = aggregated[0]["character_index"]
     assert payload["schema_version"] == "0.2"
     assert payload["character_type"] == "real_person"
     assert payload["name"] in {"三哥", "张三"}

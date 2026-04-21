@@ -18,9 +18,9 @@ async def run_character_chat(
     selected_memories = select_chat_memories(memories, limit=6)
     prompt = render_prompt(
         "runtime/character_chat.jinja2",
-        index_payload=character.index_payload,
-        core=character.core or {},
-        facet=character.facet or {},
+        character_index=character.character_index,
+        character_core=character.character_core or {},
+        character_facet=character.character_facet or {},
         memories=[
             {
                 "memory_id": memory.memory_id,
@@ -47,15 +47,15 @@ async def run_character_chat(
     reply = str(response.get("content", result.content)).strip()
     style_tags = [str(item).strip() for item in response.get("style_tags", []) if str(item).strip()]
     tone = ", ".join(style_tags) or str(
-        character.core.get("communication_profile", {}).get("tone", "in-character")
-        if character.core
+        character.character_core.get("communication_profile", {}).get("tone", "in-character")
+        if character.character_core
         else "in-character"
     ).strip()
     return {
         "reply": reply,
         "tone": tone or "in-character",
         "style_tags": style_tags,
-        "speaker": str(response.get("speaker", character.index_payload.get("name", ""))).strip(),
+        "speaker": str(response.get("speaker", character.character_index.get("name", ""))).strip(),
         "reasoning_summary": str(structured.get("reasoning_summary", "")).strip(),
         "triggered_memories": structured.get("triggered_memories", []),
         "applied_rules": structured.get("applied_rules", []),

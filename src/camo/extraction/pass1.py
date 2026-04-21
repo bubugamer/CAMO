@@ -27,7 +27,7 @@ class CharacterMention:
     position: int
 
 
-async def run_entity_index(
+async def run_character_index(
     *,
     session: AsyncSession,
     model_adapter: ModelAdapter,
@@ -38,13 +38,13 @@ async def run_entity_index(
     concurrency: int = 5,
 ) -> tuple[list, int]:
     segments = await list_text_segments_for_source(session, source_id, limit=segment_limit)
-    schema = load_json_schema("schemas/entity_index.json")
+    schema = load_json_schema("schemas/character_index.json")
     semaphore = asyncio.Semaphore(concurrency)
 
     async def extract_segment(segment) -> list[CharacterMention]:
         async with semaphore:
             prompt = render_prompt(
-                "extraction/entity_index.jinja2",
+                "extraction/character_index.jinja2",
                 source_type=source_type,
                 segment_id=segment.segment_id,
                 chapter=segment.chapter,
@@ -151,7 +151,7 @@ def _aggregate_mentions(
             {
                 "character_id": f"char_{uuid4().hex[:12]}",
                 "_sort_position": first_position,
-                "index_payload": {
+                "character_index": {
                     "schema_version": SCHEMA_VERSION,
                     "character_type": cluster["character_type"],
                     "name": canonical_name,
