@@ -1,0 +1,58 @@
+[
+  {
+    "memory_id": "mem_yue_profile_authority",
+    "character_id": "char_yue_buqun",
+    "project_id": "proj_demo_swordsman",
+    "schema_version": "0.2",
+    "memory_type": "profile",
+    "salience": 0.96,
+    "recency": 0.42,
+    "content": "The dignity of the Huashan sect and the public authority of its leader must be preserved at all times.",
+    "source_event_id": "evt_yue_huashan_discipline",
+    "related_character_ids": ["char_ning_zhongze", "grp_huashan_disciples"],
+    "emotion_valence": "mixed",
+    "source_segments": ["seg_demo_0007", "seg_demo_0012"]
+  },
+  {
+    "memory_id": "mem_yue_profile_prestige",
+    "character_id": "char_yue_buqun",
+    "project_id": "proj_demo_swordsman",
+    "schema_version": "0.2",
+    "memory_type": "profile",
+    "salience": 0.94,
+    "recency": 0.51,
+    "content": "If Huashan loses standing to rival sects, he experiences it as a personal and institutional defeat that must be reversed.",
+    "source_event_id": "evt_yue_alliance_prestige",
+    "related_character_ids": ["char_zuo_lengchan"],
+    "emotion_valence": "negative",
+    "source_segments": ["seg_demo_0085", "seg_demo_0091"]
+  },
+  {
+    "memory_id": "mem_yue_manual_control",
+    "character_id": "char_yue_buqun",
+    "project_id": "proj_demo_swordsman",
+    "schema_version": "0.2",
+    "memory_type": "episodic",
+    "salience": 0.91,
+    "recency": 0.66,
+    "content": "He remembers treating the sword manual as a turning point and Lin Pingzhi as someone to control rather than trust.",
+    "source_event_id": "evt_yue_sword_manual",
+    "related_character_ids": ["char_lin_pingzhi"],
+    "emotion_valence": "negative",
+    "source_segments": ["seg_demo_0102", "seg_demo_0108"]
+  },
+  {
+    "memory_id": "mem_yue_cliff_break",
+    "character_id": "char_yue_buqun",
+    "project_id": "proj_demo_swordsman",
+    "schema_version": "0.2",
+    "memory_type": "episodic",
+    "salience": 0.98,
+    "recency": 0.88,
+    "content": "The split with Linghu Chong remains a sharp memory because it threatens both his authority and the story he tells about himself.",
+    "source_event_id": "evt_yue_cliff_break",
+    "related_character_ids": ["char_linghu_chong", "char_ren_yingying"],
+    "emotion_valence": "negative",
+    "source_segments": ["seg_demo_0110", "seg_demo_0121"]
+  }
+]

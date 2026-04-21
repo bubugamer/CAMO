@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CAMO Character Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/demo-assets/demo.css" />
+  </head>
+  <body class="demo-chat" data-api-prefix="__CAMO_API_PREFIX__" data-query="__CAMO_QUERY__">
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand-mark" href="/demo">CAMO Demo</a>
+        <nav class="topnav">
+          <a id="nav-inspector-link" href="/demo/portrait">Portrait Inspector</a>
+          <a class="active" href="/demo/chat">Character Chat</a>
+        </nav>
+      </header>
+
+      <section class="control-bar panel">
+        <div class="control-grid control-grid-chat">
+          <label class="field">
+            <span>Project ID</span>
+            <input id="project-id" type="text" placeholder="proj_..." />
+          </label>
+          <label class="field">
+            <span>Existing Character</span>
+            <select id="character-id">
+              <option value="">Select a character</option>
+            </select>
+          </label>
+          <div class="actions actions-chat">
+            <button id="load-project" class="button button-secondary" type="button">Load Project</button>
+            <button id="load-character" class="button" type="button">Load Character</button>
+            <a id="open-inspector-link" class="button button-link" href="/demo/portrait">Open Inspector</a>
+          </div>
+        </div>
+        <p id="status-line" class="status-line" aria-live="polite">
+          Enter a project and load a saved character for chat.
+        </p>
+        <p id="error-line" class="error-line" role="alert"></p>
+      </section>
+
+      <main class="chat-layout">
+        <aside class="sidebar-column">
+          <article class="panel profile-card">
+            <div class="panel-header compact">
+              <div>
+                <p class="eyebrow">Loaded Character</p>
+                <h2 id="character-heading">No character loaded</h2>
+              </div>
+              <span id="character-badge" class="badge subtle">No active voice</span>
+            </div>
+            <p id="character-summary" class="summary-copy">
+              Choose an existing character to start a chat session.
+            </p>
+            <div class="stat-row stat-row-stack">
+              <div class="stat-card">
+                <span class="stat-label">Memories in use</span>
+                <strong id="memory-count">0</strong>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Tone</span>
+                <strong id="chat-tone-text">-</strong>
+              </div>
+            </div>
+          </article>
+        </aside>
+
+        <section class="chat-main">
+          <article class="panel chat-panel-wide">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Dialogue Test</p>
+                <h2>Simple chat frame</h2>
+              </div>
+              <span id="chat-tone" class="badge subtle">No active voice</span>
+            </div>
+            <div id="chat-log" class="chat-log" aria-live="polite">
+              <div class="chat-message assistant intro">
+                <p>Load a character first, then start the conversation.</p>
+              </div>
+            </div>
+            <form id="chat-form" class="chat-form">
+              <label class="field">
+                <span>Message</span>
+                <textarea
+                  id="chat-input"
+                  rows="4"
+                  placeholder="Ask the character about motive, memory, or attitude."
+                ></textarea>
+              </label>
+              <button id="send-chat" class="button" type="submit">Send</button>
+            </form>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="/demo-assets/demo-common.js" defer></script>
+    <script src="/demo-assets/demo-chat.js" defer></script>
+  </body>
+</html>

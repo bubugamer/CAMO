@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CAMO Portrait Inspector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/demo-assets/demo.css" />
+  </head>
+  <body class="demo-portrait" data-api-prefix="__CAMO_API_PREFIX__" data-query="__CAMO_QUERY__">
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand-mark" href="/demo">CAMO Demo</a>
+        <nav class="topnav">
+          <a class="active" href="/demo/portrait">Portrait Inspector</a>
+          <a id="nav-chat-link" href="/demo/chat">Character Chat</a>
+        </nav>
+      </header>
+
+      <section class="control-bar panel">
+        <div class="control-grid">
+          <label class="field">
+            <span>Project ID</span>
+            <input id="project-id" type="text" placeholder="proj_..." />
+          </label>
+          <label class="field">
+            <span>Text Source</span>
+            <select id="source-id">
+              <option value="">Select a source</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Existing Character</span>
+            <select id="character-id">
+              <option value="">Select a character</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Character Name</span>
+            <input id="character-name" type="text" placeholder="岳不群" />
+          </label>
+          <label class="field field-wide">
+            <span>Aliases</span>
+            <input id="aliases" type="text" placeholder="Comma separated aliases" />
+          </label>
+          <div class="actions">
+            <button id="load-project" class="button button-secondary" type="button">Load Project</button>
+            <button id="generate-portrait" class="button" type="button">Generate Portrait</button>
+            <a id="open-chat-link" class="button button-link" href="/demo/chat">Open Chat Page</a>
+          </div>
+        </div>
+        <p id="status-line" class="status-line" aria-live="polite">
+          Enter a project, choose a source, then load or generate a portrait.
+        </p>
+        <p id="error-line" class="error-line" role="alert"></p>
+      </section>
+
+      <main class="portrait-layout">
+        <section class="portrait-column">
+          <article class="panel inspector-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Portrait Inspector</p>
+                <h2 id="character-heading">No character loaded</h2>
+              </div>
+              <span id="character-badge" class="badge">Awaiting data</span>
+            </div>
+
+            <div class="inspector-tabs" role="tablist" aria-label="Portrait detail views">
+              <button
+                class="inspector-tab active"
+                data-inspector-view="portrait"
+                aria-selected="true"
+                type="button"
+              >
+                Character Portrait
+              </button>
+              <button class="inspector-tab" data-inspector-view="core" aria-selected="false" type="button">
+                Core
+              </button>
+              <button class="inspector-tab" data-inspector-view="facet" aria-selected="false" type="button">
+                Facet
+              </button>
+              <button class="inspector-tab" data-inspector-view="memories" aria-selected="false" type="button">
+                Memories
+              </button>
+              <button class="inspector-tab" data-inspector-view="raw" aria-selected="false" type="button">
+                Raw JSON
+              </button>
+            </div>
+
+            <section class="inspector-pane active" data-inspector-pane="portrait">
+              <p id="character-summary" class="summary-copy">
+                Load an existing portrait or generate one from a text source.
+              </p>
+              <div class="stat-row">
+                <div class="stat-card">
+                  <span class="stat-label">Matched segments</span>
+                  <strong id="matched-count">0</strong>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-label">Memories</span>
+                  <strong id="memory-count">0</strong>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-label">Events</span>
+                  <strong id="event-count">0</strong>
+                </div>
+              </div>
+              <div id="portrait-sections" class="portrait-sections"></div>
+            </section>
+
+            <section class="inspector-pane" data-inspector-pane="core" hidden>
+              <div id="core-sections" class="stack"></div>
+            </section>
+
+            <section class="inspector-pane" data-inspector-pane="facet" hidden>
+              <div id="facet-sections" class="stack"></div>
+            </section>
+
+            <section class="inspector-pane" data-inspector-pane="memories" hidden>
+              <div id="memories-list" class="memory-list empty-state">No memories yet.</div>
+            </section>
+
+            <section class="inspector-pane" data-inspector-pane="raw" hidden>
+              <div class="raw-pane-toolbar">
+                <button id="copy-json" class="button button-secondary button-small" type="button">Copy JSON</button>
+              </div>
+              <div class="json-tabs" role="tablist" aria-label="JSON views">
+                <button class="json-tab active" data-json-view="portrait" type="button">Portrait</button>
+                <button class="json-tab" data-json-view="events" type="button">Events</button>
+                <button class="json-tab" data-json-view="memories" type="button">Memories</button>
+                <button class="json-tab" data-json-view="snapshot" type="button">Snapshot</button>
+              </div>
+              <pre id="json-output" class="json-output">No JSON loaded yet.</pre>
+            </section>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header compact">
+              <div>
+                <p class="eyebrow">Events</p>
+                <h3>Story timeline</h3>
+              </div>
+            </div>
+            <div id="events-list" class="timeline empty-state">No events yet.</div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="/demo-assets/demo-common.js" defer></script>
+    <script src="/demo-assets/demo-portrait.js" defer></script>
+  </body>
+</html>
