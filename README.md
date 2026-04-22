@@ -6,7 +6,7 @@ CAMO (Character Modeling & Simulation Base) turns unstructured text into reusabl
 
 ## What It Includes
 
-- A FastAPI service for project setup, text import, entity indexing, character portrait extraction, and runtime chat
+- A FastAPI service for project setup, text import, character indexing, character portrait extraction, and runtime chat
 - PostgreSQL with `pgvector` for structured storage and retrieval
 - Redis for runtime cache and working memory support
 - Prompt templates and model routing config for extraction and chat
@@ -21,6 +21,8 @@ The Docker setup is built around `docker-compose.yml`:
 - `postgres`: uses `pgvector/pgvector:pg16` as the primary database
 - `redis`: provides cache and short-lived runtime state
 - `ollama`: optional local model service, enabled only when you start the `local-llm` profile
+
+For normal bring-up, the project uses the online API model settings from `.env`. You do not need Ollama just to initialize the stack, open the demo pages, or run the common startup checks.
 
 Runtime data is handled in two ways:
 
@@ -37,7 +39,7 @@ Runtime data is handled in two ways:
 
 2. Update `.env` with the model endpoint and keys you want to use.
 
-   By default, `config/models.yaml` points the extraction and runtime tasks to an OpenAI-compatible provider and embeddings to Ollama. The sample `.env.example` uses `http://ollama:11434/v1` so Docker containers can reach the optional Ollama service directly.
+   For the normal startup path, the app uses the online API provider settings you configure here. Plain `docker compose up --build` is enough to bring the project up for initialization and regular demo testing. The checked-in Ollama endpoint is only for the optional local model path.
 
 3. Start the standard stack:
 
@@ -51,7 +53,7 @@ Runtime data is handled in two ways:
    docker compose --profile local-llm up --build
    ```
 
-   If you run the app outside Docker and want to use a host-installed Ollama instead, change `OLLAMA_BASE_URL` to `http://localhost:11434/v1`.
+   Start this profile only when you explicitly want to test the optional local model path. It is not part of the default initialization flow.
 
 5. Open the common entry points:
 
