@@ -37,12 +37,12 @@ def test_build_memory_payloads_maps_related_character_names() -> None:
         Character(
             character_id="char_yue",
             project_id="proj_demo",
-            index_payload={"name": "岳不群", "aliases": ["岳先生"]},
+            character_index={"name": "岳不群", "aliases": ["岳先生"]},
         ),
         Character(
             character_id="char_linghu",
             project_id="proj_demo",
-            index_payload={"name": "令狐冲", "aliases": []},
+            character_index={"name": "令狐冲", "aliases": []},
         ),
     ]
     lookup = _build_character_lookup(characters)

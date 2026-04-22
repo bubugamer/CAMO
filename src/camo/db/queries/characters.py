@@ -45,9 +45,9 @@ async def find_character_by_name(
     normalized_candidates.discard("")
 
     for character in await list_characters(session, project_id):
-        payload = character.index_payload
-        names = {_normalize_name(str(payload.get("name", "")))}
-        names.update(_normalize_name(str(alias)) for alias in payload.get("aliases", []))
+        character_index = character.character_index
+        names = {_normalize_name(str(character_index.get("name", "")))}
+        names.update(_normalize_name(str(alias)) for alias in character_index.get("aliases", []))
         names.discard("")
         if normalized_candidates & names:
             return character
@@ -66,25 +66,27 @@ async def ensure_character_shell(
 ) -> Character:
     existing = await find_character_by_name(session, project_id, name=name, aliases=aliases)
     if existing is not None:
-        payload = existing.index_payload
-        merged_aliases = sorted({*(payload.get("aliases", [])), *aliases})
-        merged_segments = sorted({*(payload.get("source_segments", [])), *source_segments})
-        first_appearance = payload.get("first_appearance")
+        character_index = existing.character_index
+        merged_aliases = sorted({*(character_index.get("aliases", [])), *aliases})
+        merged_segments = sorted({*(character_index.get("source_segments", [])), *source_segments})
+        first_appearance = character_index.get("first_appearance")
         if not first_appearance and merged_segments:
             first_appearance = merged_segments[0]
 
-        payload["schema_version"] = SCHEMA_VERSION
-        payload["aliases"] = [alias for alias in merged_aliases if alias and alias != payload.get("name", name)]
-        payload["source_segments"] = merged_segments
-        payload["first_appearance"] = first_appearance
-        payload["character_type"] = _normalize_character_type(
-            payload.get("character_type"),
+        character_index["schema_version"] = SCHEMA_VERSION
+        character_index["aliases"] = [
+            alias for alias in merged_aliases if alias and alias != character_index.get("name", name)
+        ]
+        character_index["source_segments"] = merged_segments
+        character_index["first_appearance"] = first_appearance
+        character_index["character_type"] = _normalize_character_type(
+            character_index.get("character_type"),
             source_type=source_type,
         )
-        payload["confidence"] = float(payload.get("confidence", 0.0) or 0.0)
-        payload["titles"] = list(payload.get("titles", []))
-        payload["identities"] = list(payload.get("identities", []))
-        existing.index_payload = payload
+        character_index["confidence"] = float(character_index.get("confidence", 0.0) or 0.0)
+        character_index["titles"] = list(character_index.get("titles", []))
+        character_index["identities"] = list(character_index.get("identities", []))
+        existing.character_index = character_index
         await session.commit()
         await session.refresh(existing)
         return existing
@@ -92,7 +94,7 @@ async def ensure_character_shell(
     character = Character(
         character_id=f"char_{uuid4().hex[:12]}",
         project_id=project_id,
-        index_payload={
+        character_index={
             "schema_version": SCHEMA_VERSION,
             "character_type": _default_character_type(source_type),
             "name": name,
@@ -115,11 +117,11 @@ async def save_character_portrait(
     session: AsyncSession,
     character: Character,
     *,
-    core: dict,
-    facet: dict,
+    character_core: dict,
+    character_facet: dict,
 ) -> Character:
-    character.core = core
-    character.facet = facet
+    character.character_core = character_core
+    character.character_facet = character_facet
     await session.commit()
     await session.refresh(character)
     return character
@@ -139,13 +141,13 @@ async def upsert_characters(
             character = Character(
                 character_id=payload["character_id"],
                 project_id=project_id,
-                index_payload=payload["index_payload"],
+                character_index=payload["character_index"],
             )
             session.add(character)
             existing.append(character)
             stored.append(character)
         else:
-            match.index_payload = payload["index_payload"]
+            match.character_index = payload["character_index"]
             stored.append(match)
 
     await session.commit()
@@ -155,14 +157,14 @@ async def upsert_characters(
 
 
 def _match_existing_character(existing: list[Character], candidate: dict) -> Character | None:
-    candidate_names = {candidate["index_payload"]["name"].strip()}
-    candidate_names.update(alias.strip() for alias in candidate["index_payload"].get("aliases", []))
+    candidate_names = {candidate["character_index"]["name"].strip()}
+    candidate_names.update(alias.strip() for alias in candidate["character_index"].get("aliases", []))
     normalized_candidate = {name.lower() for name in candidate_names if name}
 
     for character in existing:
-        payload = character.index_payload
-        existing_names = {payload.get("name", "").strip()}
-        existing_names.update(alias.strip() for alias in payload.get("aliases", []))
+        character_index = character.character_index
+        existing_names = {character_index.get("name", "").strip()}
+        existing_names.update(alias.strip() for alias in character_index.get("aliases", []))
         normalized_existing = {name.lower() for name in existing_names if name}
         if normalized_candidate & normalized_existing:
             return character

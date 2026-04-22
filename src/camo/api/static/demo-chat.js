@@ -58,10 +58,10 @@ function renderChatCharacter(detail, memories) {
   chatEls.characterBadge.textContent = detail.aliases?.length ? detail.aliases.join(" · ") : "Ready to chat";
   chatEls.characterSummary.textContent =
     detail.description ||
-    (detail.core?.motivation_profile?.primary || []).join(" · ") ||
+    (detail.character_core?.motivation_profile?.primary || []).join(" · ") ||
     "Character loaded.";
   chatEls.memoryCount.textContent = String(memories.length);
-  chatEls.chatToneText.textContent = detail.core?.communication_profile?.tone || "-";
+  chatEls.chatToneText.textContent = detail.character_core?.communication_profile?.tone || "-";
   chatEls.chatTone.textContent = `${detail.name} active`;
   resetChat();
   window.CamoDemo.updateSharedLinks(chatState.projectId, detail.name, detail.character_id);

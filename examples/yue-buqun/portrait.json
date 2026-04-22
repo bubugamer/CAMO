@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "core": {
+  "character_core": {
     "schema_version": "0.2",
     "trait_profile": {
       "openness": 31,
@@ -44,7 +44,7 @@
       ]
     }
   },
-  "facet": {
+  "character_facet": {
     "schema_version": "0.2",
     "evidence_map": {
       "trait_profile.conscientiousness": [

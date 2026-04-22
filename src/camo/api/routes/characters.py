@@ -9,10 +9,10 @@ from camo.core.schemas import (
     CharacterChatRequest,
     CharacterChatResponse,
     CharacterIndexResponse,
+    CharacterIndexRunRequest,
+    CharacterIndexRunResponse,
     CharacterPortraitRequest,
     CharacterPortraitResponse,
-    EntityIndexRunRequest,
-    EntityIndexRunResponse,
     EventRecordResponse,
     MemoryRecordResponse,
 )
@@ -21,7 +21,7 @@ from camo.db.queries.events import list_events_for_character
 from camo.db.queries.memories import list_memories_for_character
 from camo.db.queries.projects import get_project
 from camo.db.queries.texts import get_text_source
-from camo.extraction.pass1 import run_entity_index
+from camo.extraction.pass1 import run_character_index
 from camo.extraction.pass2 import run_character_portrait
 from camo.models.adapter import ModelAdapter, ProviderConfigurationError
 from camo.runtime import run_character_chat
@@ -30,17 +30,17 @@ router = APIRouter(tags=["characters"])
 
 
 @router.post(
-    "/projects/{project_id}/texts/{source_id}/entity-index",
-    response_model=EntityIndexRunResponse,
+    "/projects/{project_id}/texts/{source_id}/character-index",
+    response_model=CharacterIndexRunResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def run_entity_index_endpoint(
+async def run_character_index_endpoint(
     project_id: str,
     source_id: str,
-    payload: EntityIndexRunRequest,
+    payload: CharacterIndexRunRequest,
     session: AsyncSession = Depends(get_db_session),
     adapter: ModelAdapter = Depends(get_model_adapter),
-) -> EntityIndexRunResponse:
+) -> CharacterIndexRunResponse:
     project = await get_project(session, project_id)
     if project is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
@@ -50,7 +50,7 @@ async def run_entity_index_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Text source not found")
 
     try:
-        characters, processed_segments = await run_entity_index(
+        characters, processed_segments = await run_character_index(
             session=session,
             model_adapter=adapter,
             project_id=project_id,
@@ -61,7 +61,7 @@ async def run_entity_index_endpoint(
     except ProviderConfigurationError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
 
-    return EntityIndexRunResponse(
+    return CharacterIndexRunResponse(
         project_id=project_id,
         source_id=source_id,
         processed_segments=processed_segments,
@@ -106,17 +106,17 @@ async def run_character_portrait_endpoint(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
-    payload_index = character.index_payload
+    character_index = character.character_index
     return CharacterPortraitResponse(
         project_id=project_id,
         source_id=source_id,
         character_id=character.character_id,
-        name=payload_index.get("name", payload.name),
-        aliases=payload_index.get("aliases", []),
+        name=character_index.get("name", payload.name),
+        aliases=character_index.get("aliases", []),
         processed_segments=processed_segments,
         matched_segment_ids=matched_segment_ids,
-        core=character.core or {},
-        facet=character.facet or {},
+        character_core=character.character_core or {},
+        character_facet=character.character_facet or {},
         events=[_to_event_response(event) for event in events],
         memories=[_to_memory_response(memory) for memory in memories],
     )
@@ -227,23 +227,23 @@ async def chat_with_character_endpoint(
 
 
 def _to_character_index_response(character) -> CharacterIndexResponse:
-    payload = character.index_payload
-    first_appearance = payload.get("first_appearance")
+    character_index = character.character_index
+    first_appearance = character_index.get("first_appearance")
     if isinstance(first_appearance, dict):
         first_appearance = first_appearance.get("segment_id")
     return CharacterIndexResponse(
         character_id=character.character_id,
         project_id=character.project_id,
-        schema_version=payload.get("schema_version", character.schema_version),
-        name=payload.get("name", ""),
-        description=payload.get("description", ""),
-        character_type=_coerce_character_type(payload.get("character_type")),
-        aliases=payload.get("aliases", []),
-        titles=payload.get("titles", []),
-        identities=payload.get("identities", []),
+        schema_version=character_index.get("schema_version", character.schema_version),
+        name=character_index.get("name", ""),
+        description=character_index.get("description", ""),
+        character_type=_coerce_character_type(character_index.get("character_type")),
+        aliases=character_index.get("aliases", []),
+        titles=character_index.get("titles", []),
+        identities=character_index.get("identities", []),
         first_appearance=first_appearance,
-        confidence=payload.get("confidence", 0.0),
-        source_segments=payload.get("source_segments", []),
+        confidence=character_index.get("confidence", 0.0),
+        source_segments=character_index.get("source_segments", []),
         status=character.status,
         created_at=character.created_at,
         updated_at=character.updated_at,
@@ -254,8 +254,8 @@ def _to_character_detail_response(character) -> CharacterDetailResponse:
     payload = _to_character_index_response(character).model_dump()
     return CharacterDetailResponse(
         **payload,
-        core=character.core,
-        facet=character.facet,
+        character_core=character.character_core,
+        character_facet=character.character_facet,
     )
 
 

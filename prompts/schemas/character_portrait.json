@@ -1,13 +1,13 @@
 {
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "core", "facet", "events", "memories"],
+  "required": ["schema_version", "character_core", "character_facet", "events", "memories"],
   "properties": {
     "schema_version": {
       "type": "string",
       "const": "0.2"
     },
-    "core": {
+    "character_core": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -250,7 +250,7 @@
         }
       }
     },
-    "facet": {
+    "character_facet": {
       "type": "object",
       "additionalProperties": false,
       "required": [

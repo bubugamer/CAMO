@@ -83,8 +83,8 @@ def test_run_character_chat_reads_runtime_schema() -> None:
     character = Character(
         character_id="char_demo",
         project_id="proj_demo",
-        index_payload={"name": "岳不群"},
-        core={
+        character_index={"name": "岳不群"},
+        character_core={
             "communication_profile": {
                 "tone": "formal",
             }

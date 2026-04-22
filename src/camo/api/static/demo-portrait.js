@@ -26,8 +26,8 @@ const portraitEls = {
   memoryCount: document.getElementById("memory-count"),
   eventCount: document.getElementById("event-count"),
   portraitSections: document.getElementById("portrait-sections"),
-  coreSections: document.getElementById("core-sections"),
-  facetSections: document.getElementById("facet-sections"),
+  characterCoreSections: document.getElementById("character-core-sections"),
+  characterFacetSections: document.getElementById("character-facet-sections"),
   eventsList: document.getElementById("events-list"),
   memoriesList: document.getElementById("memories-list"),
   inspectorTabs: Array.from(document.querySelectorAll(".inspector-tab")),
@@ -49,8 +49,8 @@ function portraitSetSkeleton(active) {
   [
     portraitEls.characterSummary,
     portraitEls.portraitSections,
-    portraitEls.coreSections,
-    portraitEls.facetSections,
+    portraitEls.characterCoreSections,
+    portraitEls.characterFacetSections,
     portraitEls.eventsList,
     portraitEls.memoriesList,
     portraitEls.jsonOutput,
@@ -79,7 +79,7 @@ function renderKeyValueRows(rows) {
     .join("");
 }
 
-function buildIndexJson(detail = {}) {
+function buildCharacterIndexJson(detail = {}) {
   return {
     character_id: detail.character_id,
     schema_version: detail.schema_version,
@@ -127,54 +127,54 @@ function renderPortraitOverview(detail = {}) {
   `;
 }
 
-function renderCore(core = {}) {
-  portraitEls.coreSections.innerHTML = `
+function renderCharacterCore(characterCore = {}) {
+  portraitEls.characterCoreSections.innerHTML = `
     <section class="section-block">
       <h4>Trait Profile</h4>
       ${renderKeyValueRows([
-        ["Openness", String(core.trait_profile?.openness ?? 0)],
-        ["Conscientiousness", String(core.trait_profile?.conscientiousness ?? 0)],
-        ["Extraversion", String(core.trait_profile?.extraversion ?? 0)],
-        ["Agreeableness", String(core.trait_profile?.agreeableness ?? 0)],
-        ["Neuroticism", String(core.trait_profile?.neuroticism ?? 0)],
+        ["Openness", String(characterCore.trait_profile?.openness ?? 0)],
+        ["Conscientiousness", String(characterCore.trait_profile?.conscientiousness ?? 0)],
+        ["Extraversion", String(characterCore.trait_profile?.extraversion ?? 0)],
+        ["Agreeableness", String(characterCore.trait_profile?.agreeableness ?? 0)],
+        ["Neuroticism", String(characterCore.trait_profile?.neuroticism ?? 0)],
       ])}
     </section>
     <section class="section-block">
       <h4>Motivation</h4>
       <p class="stack-copy"><strong>Primary</strong></p>
-      ${renderChipRow(core.motivation_profile?.primary || [])}
+      ${renderChipRow(characterCore.motivation_profile?.primary || [])}
       <p class="stack-copy"><strong>Secondary</strong></p>
-      ${renderChipRow(core.motivation_profile?.secondary || [])}
+      ${renderChipRow(characterCore.motivation_profile?.secondary || [])}
       <p class="stack-copy"><strong>Suppressed</strong></p>
-      ${renderChipRow(core.motivation_profile?.suppressed || [])}
+      ${renderChipRow(characterCore.motivation_profile?.suppressed || [])}
     </section>
     <section class="section-block">
       <h4>Behavior</h4>
       ${renderKeyValueRows([
-        ["Conflict style", core.behavior_profile?.conflict_style],
-        ["Risk preference", core.behavior_profile?.risk_preference],
-        ["Decision style", core.behavior_profile?.decision_style],
-        ["Dominance style", core.behavior_profile?.dominance_style],
+        ["Conflict style", characterCore.behavior_profile?.conflict_style],
+        ["Risk preference", characterCore.behavior_profile?.risk_preference],
+        ["Decision style", characterCore.behavior_profile?.decision_style],
+        ["Dominance style", characterCore.behavior_profile?.dominance_style],
       ])}
     </section>
     <section class="section-block">
       <h4>Communication</h4>
       ${renderKeyValueRows([
-        ["Tone", core.communication_profile?.tone],
-        ["Directness", core.communication_profile?.directness],
-        ["Emotional expressiveness", core.communication_profile?.emotional_expressiveness],
-        ["Verbosity", core.communication_profile?.verbosity],
-        ["Politeness", core.communication_profile?.politeness],
+        ["Tone", characterCore.communication_profile?.tone],
+        ["Directness", characterCore.communication_profile?.directness],
+        ["Emotional expressiveness", characterCore.communication_profile?.emotional_expressiveness],
+        ["Verbosity", characterCore.communication_profile?.verbosity],
+        ["Politeness", characterCore.communication_profile?.politeness],
       ])}
     </section>
     <section class="section-block">
       <h4>Constraints</h4>
       ${renderKeyValueRows([
-        ["Knowledge scope", core.constraint_profile?.knowledge_scope],
-        ["Role consistency", core.constraint_profile?.role_consistency],
+        ["Knowledge scope", characterCore.constraint_profile?.knowledge_scope],
+        ["Role consistency", characterCore.constraint_profile?.role_consistency],
       ])}
       ${renderChipRow(
-        (core.constraint_profile?.forbidden_behaviors || []).map(
+        (characterCore.constraint_profile?.forbidden_behaviors || []).map(
           (item) => `${item.namespace}.${item.tag}: ${item.description}`,
         ),
       )}
@@ -182,24 +182,24 @@ function renderCore(core = {}) {
   `;
 }
 
-function renderFacet(facet = {}) {
-  portraitEls.facetSections.innerHTML = `
+function renderCharacterFacet(characterFacet = {}) {
+  portraitEls.characterFacetSections.innerHTML = `
     <section class="section-block">
       <h4>Biographical Notes</h4>
       ${renderKeyValueRows([
-        ["Appearance", facet.biographical_notes?.appearance],
-        ["Backstory", facet.biographical_notes?.backstory],
+        ["Appearance", characterFacet.biographical_notes?.appearance],
+        ["Backstory", characterFacet.biographical_notes?.backstory],
       ])}
       <p class="stack-copy"><strong>Signature habits</strong></p>
-      ${renderChipRow(facet.biographical_notes?.signature_habits || [])}
+      ${renderChipRow(characterFacet.biographical_notes?.signature_habits || [])}
       <p class="stack-copy"><strong>Catchphrases</strong></p>
-      ${renderChipRow(facet.biographical_notes?.catchphrases || [])}
+      ${renderChipRow(characterFacet.biographical_notes?.catchphrases || [])}
     </section>
     <section class="section-block">
       <h4>Temporal Snapshots</h4>
       ${
-        (facet.temporal_snapshots || []).length
-          ? (facet.temporal_snapshots || [])
+        (characterFacet.temporal_snapshots || []).length
+          ? (characterFacet.temporal_snapshots || [])
               .map(
                 (item) => `
                   <div class="section-block">
@@ -215,8 +215,8 @@ function renderFacet(facet = {}) {
     <section class="section-block">
       <h4>Evidence Map</h4>
       ${
-        Object.keys(facet.evidence_map || {}).length
-          ? Object.entries(facet.evidence_map || {})
+        Object.keys(characterFacet.evidence_map || {}).length
+          ? Object.entries(characterFacet.evidence_map || {})
               .map(
                 ([fieldPath, entries]) => `
                   <div class="section-block">
@@ -238,13 +238,13 @@ function renderFacet(facet = {}) {
     <section class="section-block">
       <h4>Extraction Meta</h4>
       ${renderKeyValueRows([
-        ["Extracted at", facet.extraction_meta?.extracted_at],
-        ["Reviewer status", facet.extraction_meta?.reviewer_status],
-        ["Reviewer notes", facet.extraction_meta?.reviewer_notes],
-        ["Schema", facet.extraction_meta?.schema_version],
+        ["Extracted at", characterFacet.extraction_meta?.extracted_at],
+        ["Reviewer status", characterFacet.extraction_meta?.reviewer_status],
+        ["Reviewer notes", characterFacet.extraction_meta?.reviewer_notes],
+        ["Schema", characterFacet.extraction_meta?.schema_version],
       ])}
       <p class="stack-copy"><strong>Source texts</strong></p>
-      ${renderChipRow(facet.extraction_meta?.source_texts || [])}
+      ${renderChipRow(characterFacet.extraction_meta?.source_texts || [])}
     </section>
   `;
 }
@@ -319,9 +319,9 @@ function updateRawJson(view) {
   let payload = {};
   if (view === "portrait") {
     payload = {
-      index: buildIndexJson(portraitState.portrait || {}),
-      core: portraitState.portrait?.core || {},
-      facet: portraitState.portrait?.facet || {},
+      character_index: buildCharacterIndexJson(portraitState.portrait || {}),
+      character_core: portraitState.portrait?.character_core || {},
+      character_facet: portraitState.portrait?.character_facet || {},
     };
   } else if (view === "events") {
     payload = portraitState.events;
@@ -329,9 +329,9 @@ function updateRawJson(view) {
     payload = portraitState.memories;
   } else {
     payload = {
-      index: buildIndexJson(portraitState.portrait || {}),
-      core: portraitState.portrait?.core || {},
-      facet: portraitState.portrait?.facet || {},
+      character_index: buildCharacterIndexJson(portraitState.portrait || {}),
+      character_core: portraitState.portrait?.character_core || {},
+      character_facet: portraitState.portrait?.character_facet || {},
       events: portraitState.events,
       memories: portraitState.memories,
     };
@@ -364,14 +364,14 @@ function renderPortrait(detail, events, memories, matchedCount) {
   portraitEls.characterBadge.textContent = detail.aliases?.length ? detail.aliases.join(" · ") : "Saved character";
   portraitEls.characterSummary.textContent =
     detail.description ||
-    (detail.core?.motivation_profile?.primary || []).join(" · ") ||
+    (detail.character_core?.motivation_profile?.primary || []).join(" · ") ||
     "Portrait loaded.";
   portraitEls.matchedCount.textContent = String(matchedCount ?? detail.source_segments?.length ?? 0);
   portraitEls.memoryCount.textContent = String(memories.length);
   portraitEls.eventCount.textContent = String(events.length);
   renderPortraitOverview(detail);
-  renderCore(detail.core || {});
-  renderFacet(detail.facet || {});
+  renderCharacterCore(detail.character_core || {});
+  renderCharacterFacet(detail.character_facet || {});
   renderEvents(events);
   renderMemories(memories);
   updateRawJson("snapshot");

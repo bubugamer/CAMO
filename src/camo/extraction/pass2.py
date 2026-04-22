@@ -67,8 +67,8 @@ async def run_character_portrait(
         known_character_list=[
             {
                 "character_id": item.character_id,
-                "name": item.index_payload.get("name", ""),
-                "aliases": item.index_payload.get("aliases", []),
+                "name": item.character_index.get("name", ""),
+                "aliases": item.character_index.get("aliases", []),
             }
             for item in project_characters
         ],
@@ -95,9 +95,14 @@ async def run_character_portrait(
     )
     structured = result.structured or {}
     normalized_payload = _normalize_portrait_payload(structured, source_id=source_id)
-    core = normalized_payload["core"]
-    facet = normalized_payload["facet"]
-    await save_character_portrait(session, character, core=core, facet=facet)
+    character_core = normalized_payload["character_core"]
+    character_facet = normalized_payload["character_facet"]
+    await save_character_portrait(
+        session,
+        character,
+        character_core=character_core,
+        character_facet=character_facet,
+    )
 
     event_payloads = _build_event_payloads(
         project_id=project_id,
@@ -192,8 +197,8 @@ def _sample_even_indices(total: int, limit: int) -> list[int]:
 def _build_character_lookup(characters: list[Character]) -> dict[str, str]:
     lookup: dict[str, str] = {}
     for character in characters:
-        payload = character.index_payload
-        for name in [payload.get("name", ""), *payload.get("aliases", [])]:
+        character_index = character.character_index
+        for name in [character_index.get("name", ""), *character_index.get("aliases", [])]:
             normalized = _normalize_name(str(name))
             if normalized:
                 lookup[normalized] = character.character_id
@@ -316,65 +321,86 @@ def _hash_id(*parts: str) -> str:
 def _normalize_portrait_payload(payload: dict[str, Any], *, source_id: str) -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
-        "core": _normalize_core(payload.get("core", {})),
-        "facet": _normalize_facet(payload.get("facet", {}), source_id=source_id),
+        "character_core": _normalize_character_core(payload.get("character_core", {})),
+        "character_facet": _normalize_character_facet(
+            payload.get("character_facet", {}),
+            source_id=source_id,
+        ),
         "events": _normalize_events(payload.get("events", [])),
         "memories": _normalize_memories(payload.get("memories", [])),
     }
 
 
-def _normalize_core(core: dict[str, Any]) -> dict[str, Any]:
+def _normalize_character_core(character_core: dict[str, Any]) -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
         "trait_profile": {
-            "openness": _clean_int_score(core.get("trait_profile", {}).get("openness")),
-            "conscientiousness": _clean_int_score(core.get("trait_profile", {}).get("conscientiousness")),
-            "extraversion": _clean_int_score(core.get("trait_profile", {}).get("extraversion")),
-            "agreeableness": _clean_int_score(core.get("trait_profile", {}).get("agreeableness")),
-            "neuroticism": _clean_int_score(core.get("trait_profile", {}).get("neuroticism")),
+            "openness": _clean_int_score(character_core.get("trait_profile", {}).get("openness")),
+            "conscientiousness": _clean_int_score(
+                character_core.get("trait_profile", {}).get("conscientiousness")
+            ),
+            "extraversion": _clean_int_score(character_core.get("trait_profile", {}).get("extraversion")),
+            "agreeableness": _clean_int_score(character_core.get("trait_profile", {}).get("agreeableness")),
+            "neuroticism": _clean_int_score(character_core.get("trait_profile", {}).get("neuroticism")),
         },
         "motivation_profile": {
-            "primary": _clean_string_list(core.get("motivation_profile", {}).get("primary", [])),
-            "secondary": _clean_string_list(core.get("motivation_profile", {}).get("secondary", [])),
-            "suppressed": _clean_string_list(core.get("motivation_profile", {}).get("suppressed", [])),
+            "primary": _clean_string_list(character_core.get("motivation_profile", {}).get("primary", [])),
+            "secondary": _clean_string_list(
+                character_core.get("motivation_profile", {}).get("secondary", [])
+            ),
+            "suppressed": _clean_string_list(
+                character_core.get("motivation_profile", {}).get("suppressed", [])
+            ),
         },
         "behavior_profile": {
-            "conflict_style": str(core.get("behavior_profile", {}).get("conflict_style", "")).strip(),
-            "risk_preference": str(core.get("behavior_profile", {}).get("risk_preference", "")).strip(),
-            "decision_style": str(core.get("behavior_profile", {}).get("decision_style", "")).strip(),
-            "dominance_style": str(core.get("behavior_profile", {}).get("dominance_style", "")).strip(),
+            "conflict_style": str(
+                character_core.get("behavior_profile", {}).get("conflict_style", "")
+            ).strip(),
+            "risk_preference": str(
+                character_core.get("behavior_profile", {}).get("risk_preference", "")
+            ).strip(),
+            "decision_style": str(
+                character_core.get("behavior_profile", {}).get("decision_style", "")
+            ).strip(),
+            "dominance_style": str(
+                character_core.get("behavior_profile", {}).get("dominance_style", "")
+            ).strip(),
         },
         "communication_profile": {
-            "tone": str(core.get("communication_profile", {}).get("tone", "")).strip(),
-            "directness": str(core.get("communication_profile", {}).get("directness", "")).strip(),
+            "tone": str(character_core.get("communication_profile", {}).get("tone", "")).strip(),
+            "directness": str(character_core.get("communication_profile", {}).get("directness", "")).strip(),
             "emotional_expressiveness": str(
-                core.get("communication_profile", {}).get("emotional_expressiveness", "")
+                character_core.get("communication_profile", {}).get("emotional_expressiveness", "")
             ).strip(),
-            "verbosity": str(core.get("communication_profile", {}).get("verbosity", "")).strip(),
-            "politeness": str(core.get("communication_profile", {}).get("politeness", "")).strip(),
+            "verbosity": str(character_core.get("communication_profile", {}).get("verbosity", "")).strip(),
+            "politeness": str(character_core.get("communication_profile", {}).get("politeness", "")).strip(),
         },
         "constraint_profile": {
-            "knowledge_scope": str(core.get("constraint_profile", {}).get("knowledge_scope", "")).strip(),
-            "role_consistency": str(core.get("constraint_profile", {}).get("role_consistency", "")).strip(),
+            "knowledge_scope": str(
+                character_core.get("constraint_profile", {}).get("knowledge_scope", "")
+            ).strip(),
+            "role_consistency": str(
+                character_core.get("constraint_profile", {}).get("role_consistency", "")
+            ).strip(),
             "forbidden_behaviors": [
                 {
                     "namespace": str(item.get("namespace", "")).strip(),
                     "tag": str(item.get("tag", "")).strip(),
                     "description": str(item.get("description", "")).strip(),
                 }
-                for item in core.get("constraint_profile", {}).get("forbidden_behaviors", [])
+                for item in character_core.get("constraint_profile", {}).get("forbidden_behaviors", [])
                 if isinstance(item, dict)
                 and str(item.get("namespace", "")).strip()
                 and str(item.get("tag", "")).strip()
                 and str(item.get("description", "")).strip()
             ],
         },
-    }
+}
 
 
-def _normalize_facet(facet: dict[str, Any], *, source_id: str) -> dict[str, Any]:
+def _normalize_character_facet(character_facet: dict[str, Any], *, source_id: str) -> dict[str, Any]:
     evidence_map: dict[str, list[dict[str, Any]]] = {}
-    for field_path, entries in (facet.get("evidence_map", {}) or {}).items():
+    for field_path, entries in (character_facet.get("evidence_map", {}) or {}).items():
         if not isinstance(entries, list):
             continue
         evidence_map[str(field_path)] = [
@@ -395,12 +421,14 @@ def _normalize_facet(facet: dict[str, Any], *, source_id: str) -> dict[str, Any]
         "schema_version": SCHEMA_VERSION,
         "evidence_map": evidence_map,
         "biographical_notes": {
-            "appearance": str(facet.get("biographical_notes", {}).get("appearance", "")).strip(),
-            "backstory": str(facet.get("biographical_notes", {}).get("backstory", "")).strip(),
+            "appearance": str(character_facet.get("biographical_notes", {}).get("appearance", "")).strip(),
+            "backstory": str(character_facet.get("biographical_notes", {}).get("backstory", "")).strip(),
             "signature_habits": _clean_string_list(
-                facet.get("biographical_notes", {}).get("signature_habits", [])
+                character_facet.get("biographical_notes", {}).get("signature_habits", [])
             ),
-            "catchphrases": _clean_string_list(facet.get("biographical_notes", {}).get("catchphrases", [])),
+            "catchphrases": _clean_string_list(
+                character_facet.get("biographical_notes", {}).get("catchphrases", [])
+            ),
         },
         "temporal_snapshots": [
             {
@@ -409,15 +437,19 @@ def _normalize_facet(facet: dict[str, Any], *, source_id: str) -> dict[str, Any]
                 "changes": item.get("changes", {}) if isinstance(item.get("changes"), dict) else {},
                 "notes": str(item.get("notes", "")).strip(),
             }
-            for item in facet.get("temporal_snapshots", [])
+            for item in character_facet.get("temporal_snapshots", [])
             if isinstance(item, dict) and str(item.get("period_label", "")).strip()
         ],
         "extraction_meta": {
             "extracted_at": datetime.now(timezone.utc).isoformat(),
             "source_texts": [source_id],
-            "reviewer_status": str(facet.get("extraction_meta", {}).get("reviewer_status", "")).strip()
+            "reviewer_status": str(
+                character_facet.get("extraction_meta", {}).get("reviewer_status", "")
+            ).strip()
             or "unreviewed",
-            "reviewer_notes": str(facet.get("extraction_meta", {}).get("reviewer_notes", "")).strip(),
+            "reviewer_notes": str(
+                character_facet.get("extraction_meta", {}).get("reviewer_notes", "")
+            ).strip(),
             "schema_version": SCHEMA_VERSION,
         },
     }
