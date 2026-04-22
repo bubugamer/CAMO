@@ -33,21 +33,33 @@ function chatSetError(message) {
   chatEls.errorLine.textContent = message || "";
 }
 
-function appendChat(role, content) {
+function buildChatMessage(role, content, extraClass = "") {
   const div = document.createElement("div");
-  div.className = `chat-message ${role}`;
-  div.innerHTML = `<p>${window.CamoDemo.escapeHtml(content)}</p>`;
-  chatEls.chatLog.appendChild(div);
+  div.className = `chat-message ${role}${extraClass ? ` ${extraClass}` : ""}`;
+  const paragraph = document.createElement("p");
+  paragraph.textContent = content;
+  div.appendChild(paragraph);
+  return div;
+}
+
+function scrollChatToBottom() {
   chatEls.chatLog.scrollTop = chatEls.chatLog.scrollHeight;
+}
+
+function appendChat(role, content) {
+  const div = buildChatMessage(role, content);
+  chatEls.chatLog.appendChild(div);
+  scrollChatToBottom();
 }
 
 function resetChat() {
   chatState.history = [];
-  chatEls.chatLog.innerHTML = `
-    <div class="chat-message assistant intro">
-      <p>${chatState.characterName ? `You can now speak with ${window.CamoDemo.escapeHtml(chatState.characterName)}.` : "Load a character first, then start the conversation."}</p>
-    </div>
-  `;
+  chatEls.chatLog.innerHTML = "";
+  const introMessage = chatState.characterName
+    ? `You can now speak with ${chatState.characterName}.`
+    : "Load a character first, then start the conversation.";
+  chatEls.chatLog.appendChild(buildChatMessage("assistant", introMessage, "intro"));
+  scrollChatToBottom();
 }
 
 function renderChatCharacter(detail, memories) {
@@ -213,12 +225,25 @@ async function sendChat(event) {
   }
 }
 
+function handleChatInputKeydown(event) {
+  if (event.key !== "Enter" || event.shiftKey || event.isComposing || event.keyCode === 229) {
+    return;
+  }
+
+  event.preventDefault();
+  if (chatEls.sendChat.disabled) {
+    return;
+  }
+  chatEls.chatForm.requestSubmit();
+}
+
 window.CamoDemo.hydrateProjectAndName(chatEls.projectId, null);
 window.CamoDemo.updateSharedLinks(chatEls.projectId.value.trim(), "", "");
 
 chatEls.loadProject.addEventListener("click", loadProjectData);
 chatEls.loadCharacter.addEventListener("click", loadCharacter);
 chatEls.chatForm.addEventListener("submit", sendChat);
+chatEls.chatInput.addEventListener("keydown", handleChatInputKeydown);
 
 if (chatEls.projectId.value.trim()) {
   loadProjectData();
