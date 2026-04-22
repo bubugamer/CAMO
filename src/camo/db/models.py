@@ -105,8 +105,8 @@ class Character(Base):
     __tablename__ = "characters"
     __table_args__ = (
         Index("idx_characters_project", "project_id"),
-        Index("idx_characters_index", "index", postgresql_using="gin"),
-        Index("idx_characters_core", "core", postgresql_using="gin"),
+        Index("idx_characters_character_index", "character_index", postgresql_using="gin"),
+        Index("idx_characters_character_core", "character_core", postgresql_using="gin"),
     )
 
     character_id: Mapped[str] = mapped_column(Text, primary_key=True)
@@ -125,9 +125,9 @@ class Character(Base):
         nullable=False,
         server_default=text("'draft'"),
     )
-    index_payload: Mapped[dict[str, Any]] = mapped_column("index", JSONB, nullable=False)
-    core: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
-    facet: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    character_index: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    character_core: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    character_facet: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     created_at: Mapped[Any] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

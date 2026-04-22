@@ -5,11 +5,11 @@
 2. 输出必须严格符合 JSON Schema，不要输出解释、不要输出 Markdown、不要输出代码块。
 3. 顶层必须包含：
    - `schema_version`
-   - `core`
-   - `facet`
+   - `character_core`
+   - `character_facet`
    - `events`
    - `memories`
-4. `schema_version` 一律填写 `"0.2"`；`core.schema_version`、`facet.schema_version`、每个 `event.schema_version`、每个 `memory.schema_version` 也都必须是 `"0.2"`。
+4. `schema_version` 一律填写 `"0.2"`；`character_core.schema_version`、`character_facet.schema_version`、每个 `event.schema_version`、每个 `memory.schema_version` 也都必须是 `"0.2"`。
 5. `source_segments`、`segment_ids`、`period_source` 只能使用下方证据中出现过的 `segment_id`。
 6. `participant_names`、`related_character_names` 必须使用证据里实际出现的名字，不要臆造。
 7. `memory_type` 只能是 `profile` 或 `episodic`。
@@ -43,7 +43,7 @@
     - `namespace`
     - `tag`
     - `description`
-13. `evidence_map` 的 key 必须指向 Core 的字段路径，例如：
+13. `evidence_map` 的 key 必须指向 Character Core 的字段路径，例如：
     - `trait_profile.conscientiousness`
     - `motivation_profile.primary`
     - `behavior_profile.risk_preference`
@@ -88,8 +88,8 @@
 {% endfor %}
 
 输出内容的语义要求：
-- `core`：稳定人格、动机、行为模式、沟通风格、运行约束
-- `facet`：证据地图、生平补充、阶段变化、抽取元信息
+- `character_core`：稳定人格、动机、行为模式、沟通风格、运行约束
+- `character_facet`：证据地图、生平补充、阶段变化、抽取元信息
 - `events`：从证据中可明确归纳的重要事件，优先 3-6 条；证据不足时可更少
 - `memories`：
   - `profile`：稳定事实 / 长期画像
