@@ -5,10 +5,12 @@
 !.env.example
 .idea/
 .pytest_cache/
+.playwright-cli/
 .venv/
 .vscode/
 __pycache__/
 *.pyc
+books/
 config/*.local.yaml
 config/local/
 data/raw_texts/

@@ -578,23 +578,32 @@ textarea {
 
 .chat-panel-wide {
   display: grid;
-  gap: 0;
+  gap: 20px;
 }
 
 .chat-log {
-  min-height: 520px;
-  max-height: 680px;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  min-height: 0;
+  max-height: min(56vh, 680px);
+  overflow-y: auto;
   padding-right: 6px;
-  margin-bottom: 18px;
 }
 
 .chat-message {
-  max-width: 88%;
+  width: fit-content;
+  max-width: min(100%, 42rem);
+}
+
+.chat-message p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .chat-message.user {
-  justify-self: end;
+  align-self: flex-end;
   background: linear-gradient(180deg, #1d4ed8, #1e40af);
   color: #fff;
   border-color: transparent;
@@ -602,6 +611,12 @@ textarea {
 
 .chat-message.user p {
   color: rgba(255, 255, 255, 0.94);
+  word-break: keep-all;
+}
+
+.chat-message.assistant,
+.chat-message.intro {
+  align-self: flex-start;
 }
 
 .chat-message.assistant {
@@ -609,12 +624,36 @@ textarea {
 }
 
 .chat-message.intro {
+  width: 100%;
+  max-width: 100%;
   border-style: dashed;
 }
 
 .chat-form {
   display: grid;
   gap: 14px;
+}
+
+#chat-input {
+  min-height: 96px;
+}
+
+.chat-form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.chat-form-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.chat-form-footer .button {
+  min-width: 152px;
 }
 
 .profile-card {
@@ -713,6 +752,11 @@ textarea {
   .actions {
     justify-content: stretch;
     flex-direction: column;
+  }
+
+  .chat-form-footer {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .button {

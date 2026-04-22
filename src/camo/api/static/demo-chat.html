@@ -91,11 +91,15 @@
                 <span>Message</span>
                 <textarea
                   id="chat-input"
-                  rows="4"
+                  rows="3"
+                  aria-describedby="chat-input-hint"
                   placeholder="Ask the character about motive, memory, or attitude."
                 ></textarea>
               </label>
-              <button id="send-chat" class="button" type="submit">Send</button>
+              <div class="chat-form-footer">
+                <p id="chat-input-hint" class="chat-form-hint">Press Enter to send. Use Shift+Enter for a new line.</p>
+                <button id="send-chat" class="button" type="submit">Send</button>
+              </div>
             </form>
           </article>
         </section>
