@@ -1,0 +1,33 @@
+你要根据章节级聚合结果，生成目标人物的最终画像，并解决跨章节冲突。
+
+规则：
+1. 只能依据下面提供的章节级与全书级结构化证据，不要使用书外知识。
+2. 章节级聚合已经覆盖全书证据；请在此基础上统一冲突字段，不要只依据某一章。
+3. `source_segments` 只能引用下方证据中出现过的 segment_id。
+4. 输出必须严格符合 JSON Schema，不要输出解释、不要输出 Markdown、不要输出代码块。
+5. 顶层仍需输出：
+   - `schema_version`
+   - `character_core`
+   - `character_facet`
+   - `relationships`
+   - `events`
+   - `memories`
+   - `conflict_summary`
+
+目标人物：
+- name: {{ character_name }}
+- aliases: {{ aliases | tojson }}
+
+已知项目角色清单：
+{{ known_character_list | tojson(indent=2) }}
+
+章节级聚合与全书级合并结果：
+{{ merged_payload | tojson(indent=2) }}
+
+请特别处理这些冲突：
+1. 动机、行为模式、说话风格在不同章节里的差异
+2. 同一关系在不同阶段的公开态度与隐藏态度变化
+3. 同一事件或阶段摘要之间的表述冲突
+4. 时间阶段的边界和摘要是否一致
+
+`conflict_summary` 只需要简要说明你是如何统一这些冲突的。

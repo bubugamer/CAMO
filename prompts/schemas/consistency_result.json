@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["issues"],
+  "properties": {
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dimension", "severity", "description", "suggestion"],
+        "properties": {
+          "dimension": { "type": "string" },
+          "severity": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "description": { "type": "string" },
+          "suggestion": { "type": "string" },
+          "evidence_rule_id": { "type": "string" }
+        }
+      }
+    }
+  }
+}

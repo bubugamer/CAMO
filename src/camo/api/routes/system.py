@@ -3,13 +3,14 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Request
 
 from camo.api.deps import get_model_adapter
+from camo.api.rate_limit import read_rate_limit, write_rate_limit
 from camo.core.schemas import HealthResponse, ModelCheckRequest, ModelCheckResponse
 from camo.models.adapter import ModelAdapter, ProviderConfigurationError
 
 router = APIRouter(prefix="/system", tags=["system"])
 
 
-@router.get("/health", response_model=HealthResponse)
+@router.get("/health", response_model=HealthResponse, dependencies=[read_rate_limit])
 async def health(request: Request) -> HealthResponse:
     settings = request.app.state.settings
     routing_config = request.app.state.model_routing
@@ -21,7 +22,7 @@ async def health(request: Request) -> HealthResponse:
     )
 
 
-@router.post("/model-check", response_model=ModelCheckResponse)
+@router.post("/model-check", response_model=ModelCheckResponse, dependencies=[write_rate_limit])
 async def model_check(
     payload: ModelCheckRequest,
     adapter: ModelAdapter = Depends(get_model_adapter),

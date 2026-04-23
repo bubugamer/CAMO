@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from camo.api.deps import get_db_session
+from camo.api.rate_limit import read_rate_limit, write_rate_limit
 from camo.core.schemas import TextImportRequest, TextImportResponse, TextSegmentResponse, TextSourceResponse
 from camo.db.queries.projects import get_project
 from camo.db.queries.texts import get_text_source, list_text_segments, list_text_sources
@@ -13,7 +14,7 @@ from camo.texts.service import import_text_source
 router = APIRouter(prefix="/projects/{project_id}/texts", tags=["texts"])
 
 
-@router.post("", response_model=TextImportResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TextImportResponse, status_code=status.HTTP_201_CREATED, dependencies=[write_rate_limit])
 async def import_text_endpoint(
     project_id: str,
     payload: TextImportRequest,
@@ -42,7 +43,12 @@ async def import_text_endpoint(
     )
 
 
-@router.post("/upload", response_model=TextImportResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/upload",
+    response_model=TextImportResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[write_rate_limit],
+)
 async def upload_text_file_endpoint(
     project_id: str,
     request: Request,
@@ -80,7 +86,7 @@ async def upload_text_file_endpoint(
     )
 
 
-@router.get("", response_model=list[TextSourceResponse])
+@router.get("", response_model=list[TextSourceResponse], dependencies=[read_rate_limit])
 async def list_text_sources_endpoint(
     project_id: str,
     session: AsyncSession = Depends(get_db_session),
@@ -101,7 +107,7 @@ async def list_text_sources_endpoint(
     ]
 
 
-@router.get("/{source_id}", response_model=TextSourceResponse)
+@router.get("/{source_id}", response_model=TextSourceResponse, dependencies=[read_rate_limit])
 async def get_text_source_endpoint(
     project_id: str,
     source_id: str,
@@ -122,7 +128,7 @@ async def get_text_source_endpoint(
     )
 
 
-@router.get("/{source_id}/segments", response_model=list[TextSegmentResponse])
+@router.get("/{source_id}/segments", response_model=list[TextSegmentResponse], dependencies=[read_rate_limit])
 async def list_text_segments_endpoint(
     project_id: str,
     source_id: str,

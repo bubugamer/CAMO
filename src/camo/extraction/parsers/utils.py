@@ -7,7 +7,7 @@ from camo.extraction.types import SegmentDraft
 
 def normalize_text(text: str) -> str:
     normalized = text.replace("\r\n", "\n").replace("\r", "\n").lstrip("\ufeff")
-    return normalized.strip()
+    return normalized
 
 
 def has_dialogue(text: str) -> bool:

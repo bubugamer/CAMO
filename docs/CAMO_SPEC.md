@@ -302,6 +302,8 @@ class ModelAdapter:
 
 ### 7.3 任务-模型路由配置
 
+以下 YAML 为示例配置，用于说明任务路由结构。实际部署时，Provider、模型名和主备组合可按运行环境调整，不作为系统唯一固定配置。
+
 ```yaml
 providers:
   anthropic:
@@ -519,17 +521,17 @@ flowchart TB
 
 ```mermaid
 erDiagram
-    CHARACTER ||--|| ENTITY_INDEX : "1-1"
-    CHARACTER ||--|| ENTITY_CORE : "1-1"
-    CHARACTER ||--|| ENTITY_FACET : "1-1"
+    CHARACTER ||--|| CHARACTER_INDEX : "1-1"
+    CHARACTER ||--|| CHARACTER_CORE : "1-1"
+    CHARACTER ||--|| CHARACTER_FACET : "1-1"
     CHARACTER ||--o{ RELATIONSHIP : "participates"
     CHARACTER ||--o{ MEMORY : "owns"
     EVENT ||--o{ MEMORY : "source_of"
     RELATIONSHIP ||--o{ MEMORY : "source_of"
     TEXT_SEGMENT ||--o{ EVIDENCE : "cited_by"
-    EVIDENCE }o--|| ENTITY_INDEX : "supports"
-    EVIDENCE }o--|| ENTITY_CORE : "supports"
-    EVIDENCE }o--|| ENTITY_FACET : "supports"
+    EVIDENCE }o--|| CHARACTER_INDEX : "supports"
+    EVIDENCE }o--|| CHARACTER_CORE : "supports"
+    EVIDENCE }o--|| CHARACTER_FACET : "supports"
     EVIDENCE }o--|| RELATIONSHIP : "supports"
     EVIDENCE }o--|| EVENT : "supports"
 
@@ -538,7 +540,7 @@ erDiagram
         string project_id
         string schema_version
     }
-    ENTITY_INDEX {
+    CHARACTER_INDEX {
         string character_id PK
         string name
         string character_type
@@ -548,7 +550,7 @@ erDiagram
         string first_appearance
         float confidence
     }
-    ENTITY_CORE {
+    CHARACTER_CORE {
         string character_id PK
         object trait_profile
         object motivation_profile
@@ -556,7 +558,7 @@ erDiagram
         object communication_profile
         object constraint_profile
     }
-    ENTITY_FACET {
+    CHARACTER_FACET {
         string character_id PK
         object evidence_map
         object biographical_notes
@@ -1070,7 +1072,7 @@ flowchart TB
 
 四路并行检索：
 
-1. **Profile Memory**：从 `characters.core` 和 `characters.facet` 全量加载
+1. **Profile Memory**：从 `characters.character_core` 和 `characters.character_facet` 全量加载
 2. **Relationship Memory**：查询当前对话对象的关系边，转为自然语言描述
 3. **Episodic Memory**：按锚点过滤后，按 `salience × recency × 语义相似度` 排序取 TopK
 4. **Working Memory**：从 Redis 读取最近 N 轮对话
@@ -1231,7 +1233,7 @@ async def resolve_anchor(project_id: str, character_id: str, anchor_input: dict)
 - `temporal_snapshots` → 当前阶段层
 - `evidence_map` → 不直接进入主生成 Prompt，用于审核、调试、解释和一致性校验
 
-覆写优先级：`snapshot.profile_overrides > global core/facet defaults`
+覆写优先级：`snapshot.profile_overrides > global character_core / character_facet defaults`
 
 上下文窗口上限默认 8000 tokens（为输出留 2000 tokens），可按模型调整。超出时低优先级内容先丢弃。
 
@@ -1268,7 +1270,7 @@ async def resolve_anchor(project_id: str, character_id: str, anchor_input: dict)
 
 ### 15.3 资产加载与过滤
 
-**固定身份层**：直接加载 `characters.index`、`characters.core`、`facet.biographical_notes`、`constraint_profile`，不做检索，只做裁剪和模板化。
+**固定身份层**：直接加载 `characters.character_index`、`characters.character_core`、`character_facet.biographical_notes`、`constraint_profile`，不做检索，只做裁剪和模板化。
 
 **当前阶段层**：
 1. 根据 AnchorState 找到命中快照
@@ -1515,7 +1517,7 @@ def resolve_action(rule_issues: list[Issue], judge_issues: list[Issue]) -> str:
 ```json
 {
   "review_id": "rev_0001",
-  "target_type": "entity_core",
+  "target_type": "character_core",
   "target_id": "yue_buqun",
   "diff": {
     "motivation_profile.primary": {
@@ -1738,9 +1740,9 @@ CREATE TABLE characters (
     project_id    TEXT NOT NULL REFERENCES projects(project_id),
     schema_version TEXT NOT NULL DEFAULT '0.2',
     status        TEXT NOT NULL DEFAULT 'draft',
-    index         JSONB NOT NULL,
-    core          JSONB,
-    facet         JSONB,
+    character_index JSONB NOT NULL,
+    character_core  JSONB,
+    character_facet JSONB,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -1868,8 +1870,8 @@ CREATE INDEX idx_memories_embedding ON memories
     WITH (m = 16, ef_construction = 64);
 
 -- JSONB GIN 索引
-CREATE INDEX idx_characters_index ON characters USING gin (index);
-CREATE INDEX idx_characters_core ON characters USING gin (core);
+CREATE INDEX idx_characters_character_index ON characters USING gin (character_index);
+CREATE INDEX idx_characters_character_core ON characters USING gin (character_core);
 ```
 
 ### 19.3 pgvector 配置
@@ -2052,18 +2054,18 @@ camo/
 │   └── versions/
 ├── prompts/
 │   ├── extraction/
-│   │   ├── entity_index.jinja2
-│   │   ├── entity_enrichment.jinja2
+│   │   ├── character_index.jinja2
+│   │   ├── character_portrait.jinja2
 │   │   └── alias_disambiguation.jinja2
 │   ├── aggregation/
 │   │   └── conflict_resolution.jinja2
 │   ├── runtime/
-│   │   └── character_system.jinja2
+│   │   └── character_chat.jinja2
 │   ├── judge/
 │   │   └── consistency_check.jinja2
 │   └── schemas/
-│       ├── entity_index.json
-│       ├── entity_enrichment.json
+│       ├── character_index.json
+│       ├── character_portrait.json
 │       └── consistency_result.json
 ├── src/
 │   └── camo/

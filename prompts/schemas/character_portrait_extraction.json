@@ -1,0 +1,304 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "character_core", "character_facet", "relationships", "events", "memories"],
+  "$defs": {
+    "relationship_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strength", "stance", "notes"],
+      "properties": {
+        "strength": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "stance": { "type": "string", "enum": ["positive", "neutral", "negative"] },
+        "notes": { "type": "string" }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.2" },
+    "character_core": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "trait_profile",
+        "motivation_profile",
+        "behavior_profile",
+        "communication_profile",
+        "constraint_profile"
+      ],
+      "properties": {
+        "schema_version": { "type": "string", "const": "0.2" },
+        "trait_profile": { "type": "object" },
+        "motivation_profile": { "type": "object" },
+        "behavior_profile": { "type": "object" },
+        "communication_profile": { "type": "object" },
+        "constraint_profile": { "type": "object" }
+      }
+    },
+    "character_facet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "evidence_map",
+        "biographical_notes",
+        "temporal_snapshots",
+        "extraction_meta"
+      ],
+      "properties": {
+        "schema_version": { "type": "string", "const": "0.2" },
+        "evidence_map": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["segment_ids", "excerpt", "confidence", "reasoning"],
+              "properties": {
+                "segment_ids": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "excerpt": { "type": "string" },
+                "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                "reasoning": { "type": "string" }
+              }
+            }
+          }
+        },
+        "biographical_notes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["appearance", "backstory", "signature_habits", "catchphrases"],
+          "properties": {
+            "appearance": { "type": "string" },
+            "backstory": { "type": "string" },
+            "signature_habits": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "catchphrases": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "temporal_snapshots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "period_label",
+              "source_segments",
+              "display_hint",
+              "stage_summary",
+              "known_facts",
+              "unknown_facts",
+              "profile_overrides",
+              "notes"
+            ],
+            "properties": {
+              "period_label": { "type": "string" },
+              "source_segments": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "display_hint": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["primary", "secondary"],
+                "properties": {
+                  "primary": { "type": "string" },
+                  "secondary": { "type": "string" }
+                }
+              },
+              "stage_summary": { "type": "string" },
+              "known_facts": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "unknown_facts": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "profile_overrides": { "type": "object" },
+              "notes": { "type": "string" }
+            }
+          }
+        },
+        "extraction_meta": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "extracted_at",
+            "source_texts",
+            "reviewer_status",
+            "reviewer_notes",
+            "schema_version"
+          ],
+          "properties": {
+            "extracted_at": { "type": "string" },
+            "source_texts": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "reviewer_status": { "type": "string" },
+            "reviewer_notes": { "type": "string" },
+            "schema_version": { "type": "string", "const": "0.2" }
+          }
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "target_name",
+          "relation_category",
+          "relation_subtype",
+          "public_state",
+          "hidden_state",
+          "timeline",
+          "source_segments",
+          "confidence"
+        ],
+        "properties": {
+          "schema_version": { "type": "string", "const": "0.2" },
+          "target_name": { "type": "string" },
+          "relation_category": {
+            "type": "string",
+            "enum": [
+              "kinship",
+              "mentorship",
+              "affection",
+              "dependence",
+              "exploitation",
+              "opposition",
+              "alliance",
+              "reverence",
+              "hierarchy"
+            ]
+          },
+          "relation_subtype": { "type": "string" },
+          "public_state": { "$ref": "#/$defs/relationship_state" },
+          "hidden_state": {
+            "anyOf": [
+              { "$ref": "#/$defs/relationship_state" },
+              { "type": "null" }
+            ]
+          },
+          "timeline": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["period_label", "public_state", "hidden_state", "source_segments"],
+              "properties": {
+                "period_label": { "type": "string" },
+                "public_state": { "$ref": "#/$defs/relationship_state" },
+                "hidden_state": {
+                  "anyOf": [
+                    { "$ref": "#/$defs/relationship_state" },
+                    { "type": "null" }
+                  ]
+                },
+                "source_segments": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          },
+          "source_segments": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "title",
+          "description",
+          "timeline_pos",
+          "participant_names",
+          "location",
+          "emotion_valence",
+          "source_segments"
+        ],
+        "properties": {
+          "schema_version": { "type": "string", "const": "0.2" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "timeline_pos": { "type": "integer" },
+          "participant_names": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "location": { "type": "string" },
+          "emotion_valence": {
+            "type": "string",
+            "enum": ["positive", "neutral", "negative", "mixed"]
+          },
+          "source_segments": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "memories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "memory_type",
+          "salience",
+          "recency",
+          "content",
+          "source_event_title",
+          "related_character_names",
+          "emotion_valence",
+          "source_segments"
+        ],
+        "properties": {
+          "schema_version": { "type": "string", "const": "0.2" },
+          "memory_type": {
+            "type": "string",
+            "enum": ["profile", "episodic"]
+          },
+          "salience": { "type": "number", "minimum": 0, "maximum": 1 },
+          "recency": { "type": "number", "minimum": 0, "maximum": 1 },
+          "content": { "type": "string" },
+          "source_event_title": { "type": "string" },
+          "related_character_names": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "emotion_valence": {
+            "type": "string",
+            "enum": ["positive", "neutral", "negative", "mixed"]
+          },
+          "source_segments": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

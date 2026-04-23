@@ -34,6 +34,16 @@ async def get_character(
     return result.scalar_one_or_none()
 
 
+async def get_character_by_id(
+    session: AsyncSession,
+    character_id: str,
+) -> Character | None:
+    result = await session.execute(
+        select(Character).where(Character.character_id == character_id)
+    )
+    return result.scalar_one_or_none()
+
+
 async def find_character_by_name(
     session: AsyncSession,
     project_id: str,
@@ -122,6 +132,28 @@ async def save_character_portrait(
 ) -> Character:
     character.character_core = character_core
     character.character_facet = character_facet
+    await session.commit()
+    await session.refresh(character)
+    return character
+
+
+async def save_character_assets(
+    session: AsyncSession,
+    character: Character,
+    *,
+    character_index: dict | None = None,
+    character_core: dict | None = None,
+    character_facet: dict | None = None,
+    status: str | None = None,
+) -> Character:
+    if character_index is not None:
+        character.character_index = character_index
+    if character_core is not None:
+        character.character_core = character_core
+    if character_facet is not None:
+        character.character_facet = character_facet
+    if status is not None:
+        character.status = status
     await session.commit()
     await session.refresh(character)
     return character

@@ -103,29 +103,91 @@
     },
     "temporal_snapshots": [
       {
+        "snapshot_id": "snap_yue_buqun_0001_0001",
         "period_label": "Huashan restoration period",
-        "period_source": ["seg_demo_0007", "seg_demo_0012"],
-        "changes": {
-          "public_posture": "upright and disciplined",
-          "primary_pressure": "rebuilding sect stability"
+        "activation_range": {
+          "start_timeline_pos": 1,
+          "end_timeline_pos": 1
+        },
+        "display_hint": {
+          "primary": "Restoration",
+          "secondary": "Duty-first posture"
+        },
+        "stage_summary": "At this stage he is primarily defined by duty, control, and reputation.",
+        "known_facts": [
+          "He reinforces discipline through ritualized daily authority.",
+          "He presents himself as a righteous and composed sect leader."
+        ],
+        "unknown_facts": [
+          "How much of the public posture is genuine belief versus calculated presentation."
+        ],
+        "profile_overrides": {
+          "motivation_profile": {
+            "primary": ["status", "order"]
+          },
+          "communication_profile": {
+            "tone": "formal",
+            "directness": "low"
+          }
         },
         "notes": "At this stage he is primarily defined by duty, control, and reputation."
       },
       {
+        "snapshot_id": "snap_yue_buqun_0002_0003",
         "period_label": "Alliance competition period",
-        "period_source": ["seg_demo_0085", "seg_demo_0091"],
-        "changes": {
-          "motivation_shift": "status becomes more explicit",
-          "risk_level": "higher tolerance for concealed maneuvering"
+        "activation_range": {
+          "start_timeline_pos": 2,
+          "end_timeline_pos": 3
+        },
+        "display_hint": {
+          "primary": "Alliance struggle",
+          "secondary": "Prestige pressure rises"
+        },
+        "stage_summary": "Competition with rival factions sharpens his fixation on rank and influence.",
+        "known_facts": [
+          "Prestige among the sword sects becomes a direct pressure point.",
+          "He tolerates more concealed maneuvering to preserve standing."
+        ],
+        "unknown_facts": [
+          "Where he would still stop before sacrificing close relationships."
+        ],
+        "profile_overrides": {
+          "motivation_profile": {
+            "primary": ["status", "power"]
+          },
+          "behavior_profile": {
+            "risk_preference": "high"
+          }
         },
         "notes": "Competition with rival factions sharpens his fixation on rank and influence."
       },
       {
+        "snapshot_id": "snap_yue_buqun_0004_0004",
         "period_label": "Late collapse period",
-        "period_source": ["seg_demo_0110", "seg_demo_0121"],
-        "changes": {
-          "emotional_control": "less stable",
-          "relationship_state": "deep distrust of close disciples"
+        "activation_range": {
+          "start_timeline_pos": 4,
+          "end_timeline_pos": 4
+        },
+        "display_hint": {
+          "primary": "Collapse",
+          "secondary": "Mask slipping"
+        },
+        "stage_summary": "Once cornered, the polished public mask thins and fear drives harsher choices.",
+        "known_facts": [
+          "Emotional control is visibly less stable.",
+          "Distrust of close disciples becomes overt."
+        ],
+        "unknown_facts": [
+          "Whether he can still distinguish self-protection from sect duty."
+        ],
+        "profile_overrides": {
+          "communication_profile": {
+            "tone": "aggressive",
+            "emotional_expressiveness": "high"
+          },
+          "behavior_profile": {
+            "conflict_style": "direct_confrontation"
+          }
         },
         "notes": "Once cornered, the polished public mask thins and fear drives harsher choices."
       }
@@ -138,6 +200,100 @@
       "schema_version": "0.2"
     }
   },
+  "relationships": [
+    {
+      "schema_version": "0.2",
+      "source_id": "char_yue_buqun",
+      "target_id": "char_linghu_chong",
+      "relation_category": "mentorship",
+      "relation_subtype": "master_disciple",
+      "public_state": {
+        "strength": 82,
+        "stance": "positive",
+        "notes": "He publicly maintains the frame of a righteous master guiding a gifted disciple."
+      },
+      "hidden_state": {
+        "strength": 34,
+        "stance": "negative",
+        "notes": "As Linghu Chong becomes harder to control, suspicion and resentment deepen."
+      },
+      "timeline": [
+        {
+          "effective_range": {
+            "start_timeline_pos": 1,
+            "end_timeline_pos": 1
+          },
+          "snapshot_id": "snap_yue_buqun_0001_0001",
+          "public_state": {
+            "strength": 90,
+            "stance": "positive",
+            "notes": "The master-disciple bond still appears orderly and legitimate."
+          },
+          "hidden_state": null,
+          "source_segments": ["seg_demo_0007", "seg_demo_0012"]
+        },
+        {
+          "effective_range": {
+            "start_timeline_pos": 4,
+            "end_timeline_pos": 4
+          },
+          "snapshot_id": "snap_yue_buqun_0004_0004",
+          "public_state": {
+            "strength": 28,
+            "stance": "negative",
+            "notes": "The relationship breaks into open conflict."
+          },
+          "hidden_state": {
+            "strength": 78,
+            "stance": "negative",
+            "notes": "Fear of exposure and loss of authority fully overrides paternal restraint."
+          },
+          "source_segments": ["seg_demo_0110", "seg_demo_0121"]
+        }
+      ],
+      "source_segments": ["seg_demo_0007", "seg_demo_0110", "seg_demo_0121"],
+      "confidence": 0.94
+    },
+    {
+      "schema_version": "0.2",
+      "source_id": "char_yue_buqun",
+      "target_id": "char_lin_pingzhi",
+      "relation_category": "exploitation",
+      "relation_subtype": "strategic_manipulation",
+      "public_state": {
+        "strength": 48,
+        "stance": "neutral",
+        "notes": "He treats Lin Pingzhi as someone to be managed under sect discipline."
+      },
+      "hidden_state": {
+        "strength": 86,
+        "stance": "negative",
+        "notes": "The relationship is driven by calculation and control rather than trust."
+      },
+      "timeline": [
+        {
+          "effective_range": {
+            "start_timeline_pos": 3,
+            "end_timeline_pos": 3
+          },
+          "snapshot_id": "snap_yue_buqun_0002_0003",
+          "public_state": {
+            "strength": 52,
+            "stance": "neutral",
+            "notes": "He keeps the interaction inside a formal superior-subordinate frame."
+          },
+          "hidden_state": {
+            "strength": 86,
+            "stance": "negative",
+            "notes": "Lin Pingzhi is treated as a useful piece in the concealed pursuit of the manual."
+          },
+          "source_segments": ["seg_demo_0102", "seg_demo_0108"]
+        }
+      ],
+      "source_segments": ["seg_demo_0102", "seg_demo_0108"],
+      "confidence": 0.9
+    }
+  ],
   "events": [
     {
       "schema_version": "0.2",

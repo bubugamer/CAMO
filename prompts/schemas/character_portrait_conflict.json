@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "character_core",
+    "character_facet",
+    "relationships",
+    "events",
+    "memories",
+    "conflict_summary"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.2"
+    },
+    "character_core": {
+      "type": "object"
+    },
+    "character_facet": {
+      "type": "object"
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "memories": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "conflict_summary": {
+      "type": "string"
+    }
+  }
+}
