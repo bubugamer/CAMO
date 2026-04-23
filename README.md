@@ -1,155 +1,199 @@
 [English](#english) | [中文](#zh-cn)
 
-# CAMO
-
-CAMO (Character Modeling & Simulation Base) turns unstructured text into reusable character assets and runtime character sessions.
-
 <a id="english"></a>
-## English
 
-### What CAMO does today
+# CAMO — Character Modeling & Simulation Base
 
-CAMO ingests story material such as novels, chats, scripts, interviews, and plain text, then turns that material into structured character data that can be stored, reviewed, retrieved, and used in runtime conversations.
+CAMO extracts structured character data from novels, scripts, chat logs, and other unstructured text, then uses that data to power in-character conversations with timeline awareness and consistency checks.
 
-The current codebase includes:
+Feed it a book, get back character portraits, relationships, events, memories, and temporal snapshots — then talk to any character at any point in the story.
 
-- A FastAPI service for projects, text import, modeling jobs, characters, events, relationships, runtime sessions, consistency checks, reviews, feedback, and system health
-- A background worker for long-running modeling jobs and runtime memory writeback
-- PostgreSQL with `pgvector` for structured storage and retrieval
-- Redis for session state, rate limiting, queue/job status, and short-lived working memory
-- Demo pages at `/demo`, `/demo/portrait`, and `/demo/chat`
-- Prompt templates, JSON schemas, and example assets in `examples/yue-buqun`
+## How it works
 
-### Current workflow
+1. **Import** — bring in text sources (novels, scripts, interviews, etc.)
+2. **Model** — CAMO's extraction pipeline builds character indexes, portraits, relationships, events, memories, and anchorable snapshots
+3. **Talk** — create a runtime session, pick a time anchor, and chat with a character who only knows what they should know at that point in the story
 
-1. Create a project.
-2. Import one or more text sources.
-3. Start a modeling job.
-4. Let the worker build character indexes, portraits, events, memories, relationships, and anchorable snapshots.
-5. Inspect the results through the API or demo pages.
-6. Start a runtime session for a character, choose an anchor, send turns, and let the system retrieve memories, run consistency checks, and queue writeback.
+## Architecture
 
-### Docker stack
+### System overview
 
-`docker-compose.yml` starts these services:
+```mermaid
+flowchart LR
+    A[Raw Text] --> B[Preprocessing]
+    B --> C[Pass 1: Character Index]
+    C --> D[Pass 2: Portrait / Relations / Events / Memories]
+    D --> E[Temporal Snapshots]
+    E --> F[Review & Publish]
+    F --> G[(Asset Store)]
+    G --> H[Anchor Resolver]
+    H --> I[4-Layer Context Assembler]
+    I --> J[LLM Runtime]
+    J --> K{Consistency Check}
+    K -->|pass| L[Return Reply]
+    K -->|fail| M[Retry / Block]
+    J -.-> N[Memory Writeback]
+```
+
+### Extraction pipeline
+
+Two-pass Map-Reduce: raw text segments go through character discovery first, then structured extraction with the confirmed character list.
+
+```mermaid
+flowchart TB
+    subgraph "Pass 1 — Character Index"
+        S1[Segment 1] & S2[Segment 2] & S3[Segment N] --> E1[Extract Mentions]
+        E1 --> M1[Merge + Deduplicate]
+        M1 --> DIS[LLM Alias Disambiguation]
+        DIS --> IDX[Character Index]
+    end
+
+    IDX --> P2[Inject Character List]
+
+    subgraph "Pass 2 — Structured Extraction"
+        P2 --> EX[Extract per Segment]
+        EX --> CH[Chapter-level Aggregation]
+        CH --> BK[Book-level Aggregation + LLM Conflict Resolution]
+        BK --> OUT[Character Core & Facet / Relationships / Events / Memories]
+    end
+```
+
+### Runtime context assembly
+
+Each character turn assembles a prompt from four priority layers, filtered by the current time anchor:
+
+```mermaid
+flowchart TB
+    subgraph "Context Layers (top = highest priority)"
+        P0["P0 — Refusal Rules\n(out-of-timeline, meta-knowledge)"]
+        P1["P1 — Fixed Identity\n(Character Index + Core + constraints)"]
+        P2["P2 — Current Stage\n(snapshot overrides, known/unknown facts)"]
+        P3["P3 — Pre-cutoff Memories\n(episodic memories, relationships, events)"]
+    end
+
+    P0 --- P1 --- P2 --- P3
+
+    WM["P4 — Working Memory\n(recent conversation turns)"]
+    UI["P5 — User Input"]
+
+    P3 --- WM --- UI
+
+    UI --> LLM["LLM Generation"]
+    LLM --> CC["Rule Engine + Judge LLM"]
+    CC -->|pass| R["Character Reply"]
+    CC -->|fail| RT["Retry with guidance"]
+```
+
+### Deployment
+
+```mermaid
+flowchart LR
+    subgraph "Docker Compose"
+        API["api\n(FastAPI + Uvicorn)"]
+        W["worker\n(ARQ)"]
+        PG[(PostgreSQL\n+ pgvector)]
+        RD[(Redis)]
+        OL["ollama\n(optional)"]
+    end
+
+    API <--> PG
+    API <--> RD
+    W <--> PG
+    W <--> RD
+    API -.-> W
+    API --> EXT["External LLM APIs\n(Claude / OpenAI / ...)"]
+    W --> EXT
+    W -.-> OL
+```
+
+## Repository layout
+
+```
+src/camo/
+  api/          HTTP routes, middleware, demo pages
+  extraction/   Text parsing, multi-pass modeling pipeline
+  runtime/      Anchor resolution, consistency checks, turn logic
+  tasks/        Background worker, job dispatch, memory writeback
+  core/         Shared schemas and models
+prompts/        Prompt templates and JSON schemas
+migrations/     Alembic database migrations
+config/         Model routing configuration
+tests/          Automated tests
+docs/           Specs and design docs
+examples/       Sample outputs (e.g. Yue Buqun portrait)
+```
+
+## Quick start
+
+```bash
+# 1. Set up environment
+cp .env.example .env
+# Fill in your model API keys in .env
+
+# 2. Start the stack
+docker compose up --build
+
+# 3. (Optional) Include local model service
+docker compose --profile local-llm up --build
+```
+
+Once running:
+
+| URL | What |
+| --- | --- |
+| `localhost:8000/docs` | OpenAPI docs |
+| `localhost:8000/demo` | Demo hub |
+| `localhost:8000/demo/chat` | Chat demo |
+| `localhost:8000/demo/portrait` | Portrait inspector |
+| `localhost:8000/healthz` | Health check |
+
+### Docker services
 
 | Service | Purpose |
 | --- | --- |
-| `api` | Runs migrations on startup, then serves the FastAPI app on port `8000` |
-| `worker` | Runs the ARQ worker for modeling jobs and runtime memory writeback |
-| `postgres` | Primary database |
-| `redis` | Session store, queue backend, job status store, and rate-limit backend |
-| `ollama` | Optional local model endpoint, started only with the `local-llm` profile |
+| `api` | FastAPI app on port 8000 (runs migrations on startup) |
+| `worker` | ARQ worker for modeling jobs and memory writeback |
+| `postgres` | Primary database (PostgreSQL + pgvector) |
+| `redis` | Session store, queue backend, rate limiting |
+| `ollama` | Local model endpoint (only with `local-llm` profile) |
 
-The default path uses the provider settings from `.env`. You only need the `ollama` profile when you explicitly want to test a local model endpoint.
-
-### Quick start
-
-1. Create your local environment file:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Fill in the model keys or custom base URLs you want to use in `.env`.
-
-   Default startup uses the online provider settings from `.env`. The optional local path uses `OLLAMA_BASE_URL`.
-
-3. Start the standard stack:
-
-   ```bash
-   docker compose up --build
-   ```
-
-4. Start with the optional local model service:
-
-   ```bash
-   docker compose --profile local-llm up --build
-   ```
-
-5. Open the common entry points:
-
-   - API health: `http://localhost:8000/healthz`
-   - System health: `http://localhost:8000/api/v1/system/health`
-   - OpenAPI docs: `http://localhost:8000/docs`
-   - Demo hub: `http://localhost:8000/demo`
-   - Portrait inspector: `http://localhost:8000/demo/portrait`
-   - Chat demo: `http://localhost:8000/demo/chat`
-
-6. Stop everything:
-
-   ```bash
-   docker compose down
-   ```
-
-If you set `API_KEY`, add `X-API-Key: <your key>` to requests under `/api/v1`.
-
-### Minimal API walkthrough
-
-Create a project:
+## Walkthrough
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/projects \
+# Create a project
+curl -X POST localhost:8000/api/v1/projects \
   -H "Content-Type: application/json" \
-  -d '{
-    "name": "Swordsman Demo",
-    "description": "Local CAMO test project"
-  }'
-```
+  -d '{"name": "My Project", "description": "Test project"}'
 
-Import text directly:
-
-```bash
-curl -X POST http://localhost:8000/api/v1/projects/<project_id>/texts \
+# Import text
+curl -X POST localhost:8000/api/v1/projects/<project_id>/texts \
   -H "Content-Type: application/json" \
-  -d '{
-    "filename": "sample.txt",
-    "source_type": "novel",
-    "content": "Chapter 1..."
-  }'
-```
+  -d '{"filename": "ch1.txt", "source_type": "novel", "content": "Chapter 1..."}'
 
-Or upload a file:
+# Or upload a file
+curl -X POST localhost:8000/api/v1/projects/<project_id>/texts/upload \
+  -F "file=@/path/to/book.txt" -F "source_type=novel"
 
-```bash
-curl -X POST http://localhost:8000/api/v1/projects/<project_id>/texts/upload \
-  -F "file=@/absolute/path/to/sample.txt" \
-  -F "source_type=novel"
-```
-
-Start a modeling job:
-
-```bash
-curl -X POST http://localhost:8000/api/v1/projects/<project_id>/modeling \
+# Start modeling
+curl -X POST localhost:8000/api/v1/projects/<project_id>/modeling \
   -H "Content-Type: application/json" \
-  -d '{
-    "max_segments_per_chapter": 6
-  }'
-```
+  -d '{"max_segments_per_chapter": 6}'
 
-Check modeling progress:
+# Check progress
+curl localhost:8000/api/v1/projects/<project_id>/modeling/<job_id>
 
-```bash
-curl http://localhost:8000/api/v1/projects/<project_id>/modeling/<job_id>
-```
+# List characters
+curl localhost:8000/api/v1/projects/<project_id>/characters
 
-List modeled characters:
-
-```bash
-curl http://localhost:8000/api/v1/projects/<project_id>/characters
-```
-
-Create a runtime session:
-
-```bash
-curl -X POST http://localhost:8000/api/v1/runtime/sessions \
+# Create a runtime session
+curl -X POST localhost:8000/api/v1/runtime/sessions \
   -H "Content-Type: application/json" \
   -d '{
     "project_id": "<project_id>",
     "speaker_target": "<character_id>",
     "scene": {
       "scene_type": "single_chat",
-      "description": "Local runtime test",
+      "description": "Test session",
       "anchor": {
         "anchor_mode": "source_progress",
         "source_type": "timeline_pos",
@@ -157,194 +201,215 @@ curl -X POST http://localhost:8000/api/v1/runtime/sessions \
       }
     }
   }'
-```
 
-Send a turn:
-
-```bash
-curl -X POST http://localhost:8000/api/v1/runtime/sessions/<session_id>/turns \
+# Chat
+curl -X POST localhost:8000/api/v1/runtime/sessions/<session_id>/turns \
   -H "Content-Type: application/json" \
-  -d '{
-    "user_input": {
-      "content": "Who are you?"
-    }
-  }'
+  -d '{"user_input": {"content": "Who are you?"}}'
 ```
 
-### Repository layout
+If you set `API_KEY` in `.env`, add `-H "X-API-Key: <key>"` to your requests.
 
-- `src/camo/api`: HTTP routes, dependencies, demo pages, and request handling
-- `src/camo/tasks`: background worker, job dispatch, and writeback tasks
-- `src/camo/runtime`: anchor resolution, consistency checks, and runtime turn logic
-- `src/camo/extraction`: text parsing and multi-pass modeling pipeline
-- `prompts`: prompt templates and JSON schemas
-- `migrations`: Alembic migrations
-- `config`: model routing configuration
-- `tests`: automated checks
-- `docs`: product, spec, and technical design notes
-- `examples`: example outputs such as the Yue Buqun portrait and memories
+## License
 
-### Local-only files
+MIT — see [LICENSE](LICENSE).
 
-Keep machine-specific files out of Git. The repository already ignores common local-only files such as:
-
-- `.env` and `.env.*` except `.env.example`
-- `.claude/`, `.vscode/`, `.idea/`, `.venv/`, and `.playwright-cli/`
-- `books/`
-- `data/raw_texts/` and `data/exports/`
-- `docker-compose.override.yml`
-- `config/*.local.yaml` and `config/local/`
-
-### License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE).
+---
 
 <a id="zh-cn"></a>
-## 中文
 
-### 现在这套 CAMO 能做什么
+# CAMO — 人物建模与角色驱动基座
 
-CAMO 现在可以把小说、聊天记录、剧本、访谈和普通文本导入进来，抽取成结构化的人物资产，并把这些资产用于后续检索、审阅和运行时对话。
+CAMO 从小说、剧本、聊天记录等非结构化文本中自动抽取结构化的人物资产，再用这些资产驱动带时间线感知和一致性校验的角色对话。
 
-当前代码仓库已经包含：
+给它一本书，它会产出人物画像、关系图谱、事件、记忆和阶段快照——然后你可以在故事的任意时间点和任意角色对话。
 
-- 基于 FastAPI 的服务，覆盖项目、文本导入、建模任务、角色、事件、关系、运行时会话、一致性检查、审阅、反馈和系统健康检查
-- 一个后台 worker，用来处理耗时建模任务和运行时记忆回写
-- PostgreSQL + `pgvector`，用于结构化存储和检索
-- Redis，用于会话状态、限流、队列和短期工作记忆
-- `/demo`、`/demo/portrait`、`/demo/chat` 三个演示页面
-- 提示词模板、JSON Schema，以及 `examples/yue-buqun` 里的岳不群示例资产
+## 工作流程
 
-### 当前工作流
+1. **导入** — 把文本源丢进来（小说、剧本、访谈等）
+2. **建模** — 抽取管线自动生成角色索引、画像、关系、事件、记忆和阶段快照
+3. **对话** — 创建运行时会话，选一个时间锚点，和角色聊天——角色只知道那个时间点之前发生过的事
 
-1. 创建项目。
-2. 导入一个或多个文本源。
-3. 发起建模任务。
-4. 由 worker 在后台生成角色索引、角色画像、事件、记忆、关系和可锚定快照。
-5. 通过 API 或 Demo 页面检查结果。
-6. 为某个角色创建运行时会话，选定锚点后进行多轮对话，并让系统自动做记忆检索、一致性检查和回写排队。
+## 系统架构
 
-### Docker 运行框架
+### 整体流程
 
-`docker-compose.yml` 目前会启动这些服务：
+```mermaid
+flowchart LR
+    A[原始文本] --> B[预处理]
+    B --> C[Pass 1: 角色索引]
+    C --> D[Pass 2: 画像 / 关系 / 事件 / 记忆]
+    D --> E[阶段快照]
+    E --> F[审核与发布]
+    F --> G[(资产库)]
+    G --> H[锚点解析器]
+    H --> I[四层上下文拼装]
+    I --> J[LLM Runtime]
+    J --> K{一致性校验}
+    K -->|通过| L[返回回复]
+    K -->|失败| M[重试 / 阻断]
+    J -.-> N[记忆回写]
+```
+
+### 抽取管线
+
+两趟 Map-Reduce：先从原文片段中发现角色，再用确认的角色列表做结构化抽取。
+
+```mermaid
+flowchart TB
+    subgraph "Pass 1 — 角色索引"
+        S1[片段 1] & S2[片段 2] & S3[片段 N] --> E1[抽取提及]
+        E1 --> M1[合并 + 去重]
+        M1 --> DIS[LLM 别名消歧]
+        DIS --> IDX[角色索引]
+    end
+
+    IDX --> P2[注入角色清单]
+
+    subgraph "Pass 2 — 结构化抽取"
+        P2 --> EX[逐片段抽取]
+        EX --> CH[章节级聚合]
+        CH --> BK[全书聚合 + LLM 冲突解决]
+        BK --> OUT[Character Core & Facet / 关系 / 事件 / 记忆]
+    end
+```
+
+### Runtime 上下文拼装
+
+每轮角色对话从四个优先级层拼装 Prompt，所有资产按当前时间锚点过滤：
+
+```mermaid
+flowchart TB
+    subgraph "上下文层级（上方 = 最高优先级）"
+        P0["P0 — 拒答规则\n（时间线外、元知识）"]
+        P1["P1 — 固定身份\n（Character Index + Core + 约束）"]
+        P2["P2 — 当前阶段\n（快照覆写、已知/未知事实）"]
+        P3["P3 — 截止前记忆\n（情景记忆、关系、事件）"]
+    end
+
+    P0 --- P1 --- P2 --- P3
+
+    WM["P4 — 工作记忆\n（近期对话轮次）"]
+    UI["P5 — 用户输入"]
+
+    P3 --- WM --- UI
+
+    UI --> LLM["LLM 生成"]
+    LLM --> CC["规则引擎 + Judge LLM"]
+    CC -->|通过| R["角色回复"]
+    CC -->|失败| RT["携带指导重试"]
+```
+
+### 部署架构
+
+```mermaid
+flowchart LR
+    subgraph "Docker Compose"
+        API["api\n(FastAPI + Uvicorn)"]
+        W["worker\n(ARQ)"]
+        PG[(PostgreSQL\n+ pgvector)]
+        RD[(Redis)]
+        OL["ollama\n(可选)"]
+    end
+
+    API <--> PG
+    API <--> RD
+    W <--> PG
+    W <--> RD
+    API -.-> W
+    API --> EXT["外部 LLM API\n(Claude / OpenAI / ...)"]
+    W --> EXT
+    W -.-> OL
+```
+
+## 仓库目录
+
+```
+src/camo/
+  api/          HTTP 路由、中间件、Demo 页面
+  extraction/   文本解析、多阶段建模管线
+  runtime/      锚点解析、一致性检查、对话逻辑
+  tasks/        后台 Worker、任务派发、记忆回写
+  core/         共享 Schema 和模型
+prompts/        提示词模板和 JSON Schema
+migrations/     Alembic 数据库迁移
+config/         模型路由配置
+tests/          自动化测试
+docs/           规格说明和设计文档
+examples/       示例产物（如岳不群画像）
+```
+
+## 快速开始
+
+```bash
+# 1. 准备环境
+cp .env.example .env
+# 在 .env 里填入模型 API Key
+
+# 2. 启动服务
+docker compose up --build
+
+# 3.（可选）同时启动本地模型服务
+docker compose --profile local-llm up --build
+```
+
+启动后可以访问：
+
+| 地址 | 说明 |
+| --- | --- |
+| `localhost:8000/docs` | OpenAPI 文档 |
+| `localhost:8000/demo` | Demo 首页 |
+| `localhost:8000/demo/chat` | 对话演示 |
+| `localhost:8000/demo/portrait` | 画像检查 |
+| `localhost:8000/healthz` | 健康检查 |
+
+### Docker 服务
 
 | 服务 | 作用 |
 | --- | --- |
-| `api` | 启动时先跑迁移，再在 `8000` 端口提供 FastAPI 服务 |
-| `worker` | 运行 ARQ worker，处理建模任务和运行时记忆回写 |
-| `postgres` | 主数据库 |
-| `redis` | 会话存储、队列后端、任务状态存储和限流后端 |
-| `ollama` | 可选的本地模型服务，只在 `local-llm` profile 下启动 |
+| `api` | FastAPI 应用，端口 8000（启动时自动跑迁移） |
+| `worker` | ARQ Worker，处理建模任务和记忆回写 |
+| `postgres` | 主数据库（PostgreSQL + pgvector） |
+| `redis` | 会话存储、队列后端、限流 |
+| `ollama` | 本地模型服务（仅 `local-llm` profile 下启动） |
 
-默认路径使用 `.env` 里配置的在线模型服务。只有在你明确要测试本地模型时，才需要把 `ollama` 一起拉起来。
-
-### 快速开始
-
-1. 先生成本地环境文件：
-
-   ```bash
-   cp .env.example .env
-   ```
-
-2. 在 `.env` 里填入你要使用的模型密钥或自定义基地址。
-
-   默认启动路径走在线模型配置。可选的本地路径使用 `OLLAMA_BASE_URL`。
-
-3. 启动标准栈：
-
-   ```bash
-   docker compose up --build
-   ```
-
-4. 如果要把可选的本地模型服务一起启动：
-
-   ```bash
-   docker compose --profile local-llm up --build
-   ```
-
-5. 启动后可访问这些入口：
-
-   - API 健康检查：`http://localhost:8000/healthz`
-   - 系统健康检查：`http://localhost:8000/api/v1/system/health`
-   - OpenAPI 文档：`http://localhost:8000/docs`
-   - Demo 首页：`http://localhost:8000/demo`
-   - 画像检查页：`http://localhost:8000/demo/portrait`
-   - 对话演示页：`http://localhost:8000/demo/chat`
-
-6. 停止服务：
-
-   ```bash
-   docker compose down
-   ```
-
-如果你配置了 `API_KEY`，那么访问 `/api/v1` 下的接口时要带上 `X-API-Key: <你的 key>`。
-
-### 最小调用流程
-
-先创建项目：
+## 调用示例
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/projects \
+# 创建项目
+curl -X POST localhost:8000/api/v1/projects \
   -H "Content-Type: application/json" \
-  -d '{
-    "name": "Swordsman Demo",
-    "description": "本地 CAMO 测试项目"
-  }'
-```
+  -d '{"name": "测试项目", "description": "本地测试"}'
 
-直接导入文本：
-
-```bash
-curl -X POST http://localhost:8000/api/v1/projects/<project_id>/texts \
+# 导入文本
+curl -X POST localhost:8000/api/v1/projects/<project_id>/texts \
   -H "Content-Type: application/json" \
-  -d '{
-    "filename": "sample.txt",
-    "source_type": "novel",
-    "content": "第一章……"
-  }'
-```
+  -d '{"filename": "ch1.txt", "source_type": "novel", "content": "第一章……"}'
 
-或者上传文件：
+# 或者上传文件
+curl -X POST localhost:8000/api/v1/projects/<project_id>/texts/upload \
+  -F "file=@/path/to/book.txt" -F "source_type=novel"
 
-```bash
-curl -X POST http://localhost:8000/api/v1/projects/<project_id>/texts/upload \
-  -F "file=@/absolute/path/to/sample.txt" \
-  -F "source_type=novel"
-```
-
-发起建模任务：
-
-```bash
-curl -X POST http://localhost:8000/api/v1/projects/<project_id>/modeling \
+# 发起建模
+curl -X POST localhost:8000/api/v1/projects/<project_id>/modeling \
   -H "Content-Type: application/json" \
-  -d '{
-    "max_segments_per_chapter": 6
-  }'
-```
+  -d '{"max_segments_per_chapter": 6}'
 
-查看建模进度：
+# 查看进度
+curl localhost:8000/api/v1/projects/<project_id>/modeling/<job_id>
 
-```bash
-curl http://localhost:8000/api/v1/projects/<project_id>/modeling/<job_id>
-```
+# 列出角色
+curl localhost:8000/api/v1/projects/<project_id>/characters
 
-列出已建模角色：
-
-```bash
-curl http://localhost:8000/api/v1/projects/<project_id>/characters
-```
-
-创建运行时会话：
-
-```bash
-curl -X POST http://localhost:8000/api/v1/runtime/sessions \
+# 创建运行时会话
+curl -X POST localhost:8000/api/v1/runtime/sessions \
   -H "Content-Type: application/json" \
   -d '{
     "project_id": "<project_id>",
     "speaker_target": "<character_id>",
     "scene": {
       "scene_type": "single_chat",
-      "description": "本地运行时测试",
+      "description": "测试会话",
       "anchor": {
         "anchor_mode": "source_progress",
         "source_type": "timeline_pos",
@@ -352,44 +417,15 @@ curl -X POST http://localhost:8000/api/v1/runtime/sessions \
       }
     }
   }'
-```
 
-发送一轮对话：
-
-```bash
-curl -X POST http://localhost:8000/api/v1/runtime/sessions/<session_id>/turns \
+# 对话
+curl -X POST localhost:8000/api/v1/runtime/sessions/<session_id>/turns \
   -H "Content-Type: application/json" \
-  -d '{
-    "user_input": {
-      "content": "你是谁？"
-    }
-  }'
+  -d '{"user_input": {"content": "你是谁？"}}'
 ```
 
-### 仓库目录
+如果在 `.env` 里配了 `API_KEY`，请求时加上 `-H "X-API-Key: <key>"`。
 
-- `src/camo/api`：HTTP 路由、依赖注入、Demo 页面和请求处理
-- `src/camo/tasks`：后台 worker、任务派发和回写任务
-- `src/camo/runtime`：锚点解析、一致性检查和运行时对话逻辑
-- `src/camo/extraction`：文本解析和多阶段建模流水线
-- `prompts`：提示词模板和 JSON Schema
-- `migrations`：Alembic 迁移
-- `config`：模型路由配置
-- `tests`：自动化测试
-- `docs`：产品文档、规格说明和技术设计文档
-- `examples`：示例产物，例如岳不群画像和记忆
+## 开源协议
 
-### 不应上传的本地文件
-
-仓库已经默认忽略常见的本地专用文件，例如：
-
-- `.env` 和 `.env.*`，但保留 `.env.example`
-- `.claude/`、`.vscode/`、`.idea/`、`.venv/`、`.playwright-cli/`
-- `books/`
-- `data/raw_texts/` 和 `data/exports/`
-- `docker-compose.override.yml`
-- `config/*.local.yaml` 和 `config/local/`
-
-### 开源协议
-
-本项目采用 MIT 协议，详见 [LICENSE](LICENSE)。
+MIT — 详见 [LICENSE](LICENSE)。
