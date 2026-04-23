@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "response",
+    "reasoning_summary",
+    "triggered_memories",
+    "applied_rules"
+  ],
+  "properties": {
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["speaker", "content", "style_tags"],
+      "properties": {
+        "speaker": { "type": "string" },
+        "content": { "type": "string" },
+        "style_tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "reasoning_summary": {
+      "type": "string"
+    },
+    "triggered_memories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["memory_id", "reason"],
+        "properties": {
+          "memory_id": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "applied_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["namespace", "tag"],
+        "properties": {
+          "namespace": { "type": "string" },
+          "tag": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -22,6 +22,7 @@ def parse_chat(text: str) -> PreprocessResult:
         content = text[header.end():end].strip()
         messages.append(
             {
+                "message_index": index + 1,
                 "timestamp": datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S"),
                 "sender": sender,
                 "content": content,
@@ -59,6 +60,7 @@ def parse_chat(text: str) -> PreprocessResult:
             for message in round_messages
         ]
         participants = sorted({message["sender"] for message in round_messages})
+        message_indices = [message["message_index"] for message in round_messages]
         segments.append(
             SegmentDraft(
                 content="\n".join(rendered_lines),
@@ -71,6 +73,14 @@ def parse_chat(text: str) -> PreprocessResult:
                         round_messages[0]["timestamp"].isoformat(),
                         round_messages[-1]["timestamp"].isoformat(),
                     ],
+                    "source_progress": {
+                        "source_type": "chat",
+                        "round": round_index,
+                        "message_index_start": min(message_indices),
+                        "message_index_end": max(message_indices),
+                        "timestamp_start": round_messages[0]["timestamp"].isoformat(),
+                        "timestamp_end": round_messages[-1]["timestamp"].isoformat(),
+                    },
                 },
             )
         )

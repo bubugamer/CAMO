@@ -4,6 +4,7 @@ const portraitState = {
   characterId: "",
   characterName: "",
   portrait: null,
+  relationships: [],
   events: [],
   memories: [],
   activeInspectorView: "portrait",
@@ -95,7 +96,7 @@ function buildCharacterIndexJson(detail = {}) {
   };
 }
 
-function renderPortraitOverview(detail = {}) {
+function renderPortraitOverview(detail = {}, relationships = []) {
   const firstAppearance = detail.first_appearance || "Not captured yet";
 
   portraitEls.portraitSections.innerHTML = `
@@ -123,6 +124,22 @@ function renderPortraitOverview(detail = {}) {
         ["Schema", detail.schema_version || "0.2"],
         ["Status", detail.status || "draft"],
       ])}
+    </section>
+    <section class="section-block">
+      <h4>Relationships</h4>
+      ${
+        relationships.length
+          ? relationships
+              .map(
+                (item) => `
+                  <p class="stack-copy">
+                    <strong>${window.CamoDemo.escapeHtml(item.relation_subtype || item.relation_category || "Relationship")}</strong>
+                    : ${window.CamoDemo.escapeHtml(item.target_character_id || "Unknown target")}
+                  </p>`,
+              )
+              .join("")
+          : `<p class="stack-copy">No relationships yet.</p>`
+      }
     </section>
   `;
 }
@@ -204,8 +221,21 @@ function renderCharacterFacet(characterFacet = {}) {
                 (item) => `
                   <div class="section-block">
                     <h4>${window.CamoDemo.escapeHtml(item.period_label || "Period")}</h4>
+                    <p class="stack-copy">${window.CamoDemo.escapeHtml(item.stage_summary || "No stage summary yet.")}</p>
+                    <p class="stack-copy">
+                      <strong>Range</strong>: ${window.CamoDemo.escapeHtml(
+                        `${item.activation_range?.start_timeline_pos ?? "-"} → ${item.activation_range?.end_timeline_pos ?? "-"}`,
+                      )}
+                    </p>
+                    <p class="stack-copy">
+                      <strong>Display</strong>: ${window.CamoDemo.escapeHtml(item.display_hint?.primary || item.period_label || "Period")}
+                      ${item.display_hint?.secondary ? ` · ${window.CamoDemo.escapeHtml(item.display_hint.secondary)}` : ""}
+                    </p>
                     <p class="stack-copy">${window.CamoDemo.escapeHtml(item.notes || "No notes yet.")}</p>
-                    ${renderChipRow(item.period_source || [])}
+                    <p class="stack-copy"><strong>Known facts</strong></p>
+                    ${renderChipRow(item.known_facts || [])}
+                    <p class="stack-copy"><strong>Unknown facts</strong></p>
+                    ${renderChipRow(item.unknown_facts || [])}
                   </div>`,
               )
               .join("")
@@ -322,6 +352,7 @@ function updateRawJson(view) {
       character_index: buildCharacterIndexJson(portraitState.portrait || {}),
       character_core: portraitState.portrait?.character_core || {},
       character_facet: portraitState.portrait?.character_facet || {},
+      relationships: portraitState.relationships,
     };
   } else if (view === "events") {
     payload = portraitState.events;
@@ -332,6 +363,7 @@ function updateRawJson(view) {
       character_index: buildCharacterIndexJson(portraitState.portrait || {}),
       character_core: portraitState.portrait?.character_core || {},
       character_facet: portraitState.portrait?.character_facet || {},
+      relationships: portraitState.relationships,
       events: portraitState.events,
       memories: portraitState.memories,
     };
@@ -353,10 +385,11 @@ function syncPortraitSelection() {
   portraitEls.characterId.value = portraitState.characterId;
 }
 
-function renderPortrait(detail, events, memories, matchedCount) {
+function renderPortrait(detail, relationships, events, memories, matchedCount) {
   portraitState.characterId = detail.character_id;
   portraitState.characterName = detail.name;
   portraitState.portrait = detail;
+  portraitState.relationships = relationships;
   portraitState.events = events;
   portraitState.memories = memories;
 
@@ -369,7 +402,7 @@ function renderPortrait(detail, events, memories, matchedCount) {
   portraitEls.matchedCount.textContent = String(matchedCount ?? detail.source_segments?.length ?? 0);
   portraitEls.memoryCount.textContent = String(memories.length);
   portraitEls.eventCount.textContent = String(events.length);
-  renderPortraitOverview(detail);
+  renderPortraitOverview(detail, relationships);
   renderCharacterCore(detail.character_core || {});
   renderCharacterFacet(detail.character_facet || {});
   renderEvents(events);
@@ -483,14 +516,17 @@ async function loadCharacterDetail() {
 
   try {
     portraitState.characterId = portraitEls.characterId.value;
-    const [detail, events, memories] = await Promise.all([
+    const [detail, relationships, events, memories] = await Promise.all([
       window.CamoDemo.apiFetch(`/projects/${portraitState.projectId}/characters/${portraitState.characterId}`),
+      window.CamoDemo.apiFetch(
+        `/projects/${portraitState.projectId}/characters/${portraitState.characterId}/relationships`,
+      ),
       window.CamoDemo.apiFetch(`/projects/${portraitState.projectId}/characters/${portraitState.characterId}/events`),
       window.CamoDemo.apiFetch(`/projects/${portraitState.projectId}/characters/${portraitState.characterId}/memories`),
     ]);
     portraitEls.characterName.value = detail.name;
     portraitEls.aliases.value = (detail.aliases || []).join(", ");
-    renderPortrait(detail, events, memories);
+    renderPortrait(detail, relationships, events, memories);
     portraitSetStatus(`Loaded ${detail.name}.`);
   } catch (error) {
     portraitSetError(error.message);
@@ -529,7 +565,13 @@ async function generatePortrait() {
       },
     );
     const detail = await window.CamoDemo.apiFetch(`/projects/${projectId}/characters/${generated.character_id}`);
-    renderPortrait(detail, generated.events, generated.memories, generated.processed_segments);
+    renderPortrait(
+      detail,
+      generated.relationships || [],
+      generated.events,
+      generated.memories,
+      generated.processed_segments,
+    );
     portraitSetStatus(`Portrait ready for ${generated.name}.`);
   } catch (error) {
     portraitSetError(error.message);

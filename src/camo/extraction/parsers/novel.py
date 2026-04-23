@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import re
 
 from camo.extraction.parsers.plain import parse_plain
@@ -16,22 +17,36 @@ def parse_novel(text: str) -> PreprocessResult:
 
     segments: list[SegmentDraft] = []
     for index, match in enumerate(matches):
+        chapter_index = index + 1
         chapter_start = match.start()
         chapter_end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
         chapter_text = text[chapter_start:chapter_end].strip("\n")
         leading_trim = len(text[chapter_start:chapter_end]) - len(text[chapter_start:chapter_end].lstrip("\n"))
         chapter_title = match.group(0).strip()
-        segments.extend(
-            chunk_text(
-                chapter_text,
-                chapter=chapter_title,
-                start_offset=chapter_start + leading_trim,
-                target_size=1400,
-                min_size=900,
-                max_size=1800,
-                overlap=200,
-            )
+        chapter_segments = chunk_text(
+            chapter_text,
+            chapter=chapter_title,
+            start_offset=chapter_start + leading_trim,
+            target_size=1400,
+            min_size=900,
+            max_size=1800,
+            overlap=200,
         )
+        for segment_in_chapter, segment in enumerate(chapter_segments, start=1):
+            segments.append(
+                replace(
+                    segment,
+                    metadata={
+                        **segment.metadata,
+                        "source_progress": {
+                            "source_type": "novel",
+                            "chapter_index": chapter_index,
+                            "chapter_title": chapter_title,
+                            "segment_in_chapter": segment_in_chapter,
+                        },
+                    },
+                )
+            )
 
     return PreprocessResult(
         source_type="novel",

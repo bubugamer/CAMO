@@ -42,6 +42,11 @@ class Settings(BaseSettings):
         default=Path("config/models.yaml"),
         alias="MODEL_CONFIG_PATH",
     )
+    api_key: str | None = Field(default=None, alias="API_KEY")
+    working_memory_limit: int = Field(default=50, alias="WORKING_MEMORY_LIMIT")
+    session_ttl_seconds: int = Field(default=7200, alias="SESSION_TTL_SECONDS")
+    job_ttl_seconds: int = Field(default=86400, alias="JOB_TTL_SECONDS")
+    runtime_max_retries: int = Field(default=2, alias="RUNTIME_MAX_RETRIES")
 
     @model_validator(mode="after")
     def resolve_paths(self) -> Settings:

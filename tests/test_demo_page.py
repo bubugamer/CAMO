@@ -4,7 +4,9 @@ from fastapi.testclient import TestClient
 import pytest
 
 from camo.api.main import create_app
+from camo.api.rate_limit import InMemoryRateLimiter
 from camo.core.settings import Settings
+from camo.runtime.session_store import InMemorySessionStore
 
 
 @pytest.mark.parametrize(
@@ -16,7 +18,11 @@ from camo.core.settings import Settings
     ],
 )
 def test_demo_pages_render(path: str, needle: str) -> None:
-    app = create_app(Settings())
+    app = create_app(
+        Settings(),
+        session_store=InMemorySessionStore(),
+        rate_limiter=InMemoryRateLimiter(),
+    )
 
     with TestClient(app) as client:
         response = client.get(path)

@@ -49,3 +49,31 @@ async def list_events_for_character(
         .order_by(Event.timeline_pos.asc().nullslast(), Event.created_at.asc())
     )
     return list(result.scalars().all())
+
+
+async def list_events_for_project(
+    session: AsyncSession,
+    *,
+    project_id: str,
+) -> list[Event]:
+    result = await session.execute(
+        select(Event)
+        .where(Event.project_id == project_id)
+        .order_by(Event.timeline_pos.asc().nullslast(), Event.created_at.asc())
+    )
+    return list(result.scalars().all())
+
+
+async def get_event(
+    session: AsyncSession,
+    *,
+    project_id: str,
+    event_id: str,
+) -> Event | None:
+    result = await session.execute(
+        select(Event).where(
+            Event.project_id == project_id,
+            Event.event_id == event_id,
+        )
+    )
+    return result.scalar_one_or_none()

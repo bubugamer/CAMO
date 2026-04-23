@@ -1,4 +1,4 @@
-你要为目标人物生成符合 CAMO PRD v0.2 / TDD v0.1 的“人物画像 + 事件 + 记忆”结构化 JSON。
+你要为目标人物生成符合 CAMO PRD v0.2 / TDD v0.2 的“人物画像 + 关系 + 事件 + 记忆”结构化 JSON。
 
 硬性要求：
 1. 只能根据下面提供的证据片段总结，不要使用书外知识，不要补全未出现的信息。
@@ -7,11 +7,12 @@
    - `schema_version`
    - `character_core`
    - `character_facet`
+   - `relationships`
    - `events`
    - `memories`
-4. `schema_version` 一律填写 `"0.2"`；`character_core.schema_version`、`character_facet.schema_version`、每个 `event.schema_version`、每个 `memory.schema_version` 也都必须是 `"0.2"`。
-5. `source_segments`、`segment_ids`、`period_source` 只能使用下方证据中出现过的 `segment_id`。
-6. `participant_names`、`related_character_names` 必须使用证据里实际出现的名字，不要臆造。
+4. `schema_version` 一律填写 `"0.2"`；`character_core.schema_version`、`character_facet.schema_version`、每个 `relationship.schema_version`、每个 `event.schema_version`、每个 `memory.schema_version` 也都必须是 `"0.2"`。
+5. `source_segments`、`segment_ids` 只能使用下方证据中出现过的 `segment_id`。
+6. `participant_names`、`related_character_names`、`target_name` 必须使用证据里实际出现的名字，不要臆造。
 7. `memory_type` 只能是 `profile` 或 `episodic`。
 8. `trait_profile` 必须是 0 到 100 的整数分值，不要写文字解释。
 9. `behavior_profile`、`communication_profile`、`constraint_profile` 中的枚举值必须严格使用 Schema 允许的枚举。
@@ -37,6 +38,7 @@
     - `meta`
     - `style`
     - `setting`
+    - `plot`
     - `ethics`
     - `custom`
 12. `forbidden_behaviors` 每项都必须是：
@@ -68,7 +70,21 @@
     - `constraint_profile.knowledge_scope`
     - `constraint_profile.role_consistency`
     - `constraint_profile.forbidden_behaviors`
-14. 如果证据不足：
+14. `temporal_snapshots` 必须按时间顺序排列，并为每个阶段提供：
+    - `period_label`
+    - `source_segments`
+    - `display_hint`
+    - `stage_summary`
+    - `known_facts`
+    - `unknown_facts`
+    - `profile_overrides`
+    - `notes`
+15. `relationships` 必须只描述目标人物指向其他已知人物的关系；`timeline` 可为空数组，但若填写则每项都必须带：
+    - `period_label`
+    - `public_state`
+    - `hidden_state`
+    - `source_segments`
+16. 如果证据不足：
     - 字符串字段可留空字符串
     - 数组字段返回空数组
     - 不要发明不存在的事件、口头禅、外貌或背景
@@ -90,6 +106,7 @@
 输出内容的语义要求：
 - `character_core`：稳定人格、动机、行为模式、沟通风格、运行约束
 - `character_facet`：证据地图、生平补充、阶段变化、抽取元信息
+- `relationships`：目标人物对其他人物的关系边，包含公开态度、隐含态度和可选阶段变化
 - `events`：从证据中可明确归纳的重要事件，优先 3-6 条；证据不足时可更少
 - `memories`：
   - `profile`：稳定事实 / 长期画像
